@@ -1,0 +1,85 @@
+#============dataset============
+num_frames: &num_frames 16
+# dataPath: 'E:/dataset/UCSD/UCSDped1/video/label/'
+#ped2 dataset
+# dataPath: 'E:/dataset/UCSD/UCSDped2/label/'
+#avenue dataset
+train_dataPath: 'E:/dataset/shanghaitech/label/train.csv'
+val_dataPath: 'E:/dataset/shanghaitech/label/test.csv'
+tst_dataPath: 'E:/dataset/shanghaitech/label/test.csv'
+bgPth: '../dataset/bg/ped2Bg.pt'
+#color images, avenue dataset for patch
+#mean: [0.1004, 0.0956, 0.0938]
+#std: [0.2121, 0.2025, 0.2027]
+
+#color image, avenue dataset for images with bg shortSide_size:240 crop_size: [3, 8, 40, 40]
+#mean: [0.0996, 0.0944, 0.0916]
+#std: [0.2087, 0.1989, 0.1977]
+
+#color image, avenue dataset for images without bg shortSide_size:300 crop_size: [3, 8, 40, 40]
+mean: [0.0745, 0.0791, 0.0797]
+std: [0.1468, 0.1525, 0.1552]
+
+#color image, avenue dataset for images without bg shortSide_size:240 crop_size: [3, 8, 40, 40]
+#mean: [0.4092, 0.3931, 0.3923]
+#std: [0.2590, 0.2453, 0.2567]
+
+##color image, avenue dataset for image without bg
+#mean: [0.1044, 0.0995, 0.0961]
+#std: [0.2183, 0.2086, 0.2062]
+
+#gray image
+#mean: [0.45]
+#std: [0.225]
+
+frames_per_second: 30
+# side_size: 200
+#if shortSide_size: 160, and crop_size: [3, 8, 160, 280], do the detection on whole image
+crop_size: [3, 8, 40, 40] # patch size h,w is x*4
+
+# device_number: 1
+batch_size: 2
+num_works: 0
+#ped2
+#shortSide_size: 240 # resized short size of video frame and keep the width/height radio
+shortSide_size: 320
+
+#ped2 dataset
+#raw_shape: [3, 16, 240, 360] # original size of video frame
+#avenue dataset
+raw_shape: [3, *num_frames, 480, 856] # original size of video frame
+train_dt_sampler: 'random'
+val_dt_sampler: 'uniform'
+stride: 16
+
+
+#=====================train=====================
+# training parameters
+lr: 0.0001
+weight_decay: 0.0001
+# optimizer: Adam
+aeWarmEpochs: 1
+
+# training scheduler
+lr_scheduler: 'step'
+lr_decay_steps: 80
+lr_decay_rate: 0.5
+lr_decay_min_lr: 0.00001
+updtR_epoches: 15
+
+# model parameters
+# input_shape: [3, 8, 32, 32]
+code_length: 64
+nu: 0.01
+objFlg: 'soft'
+
+# loss parameters
+oneLsAlpha: 1 #1-0.827, 2-0.839 #5-0.826
+aeLsAlpha: 20
+gdLsAlpha: 1 #1
+tgLsAlpha: 10 #20 # 20-0.839, 50-0.81，10-0.830
+cntNum: 1 # clusters
+
+#score combination coefficients list
+cmbScoreWght: [-2, -1, -0.5, -0.1, 0, 0.1, 0.5, 1, 2, 5]
+
