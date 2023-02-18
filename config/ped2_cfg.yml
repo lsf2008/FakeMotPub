@@ -7,7 +7,7 @@ num_frames: &num_frames 16
 train_dataPath: 'E:/dataset/shanghaitech/label/train.csv'
 val_dataPath: 'E:/dataset/shanghaitech/label/test.csv'
 tst_dataPath: 'E:/dataset/shanghaitech/label/test.csv'
-bgPth: '../dataset/bg/ped2Bg.pt'
+bgPth: 'dataset/bg/ped2Bg.pt'
 #color images, avenue dataset for patch
 #mean: [0.1004, 0.0956, 0.0938]
 #std: [0.2121, 0.2025, 0.2027]

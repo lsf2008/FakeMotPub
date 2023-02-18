@@ -12,7 +12,7 @@ class MultRecLossModule(pytorch_lightning.LightningModule):
     def __init__(self, inputModel, **kwargs):
         super(MultRecLossModule, self).__init__()
         self.save_hyperparameters()
-        self.model = inputModel
+        self.model = inputModel(input_shape=self.hparams.input_shape, code_length=self.hparams.code_length)
         # loss function
         layers = [0]
         self.aeLoss = AeLoss(layers)
