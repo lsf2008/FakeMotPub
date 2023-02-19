@@ -52,7 +52,7 @@ def initial_params(train_cfg='config/ave_train_cfg.yaml', dt_cfg='config/dtped2_
 
     train_cfg = load_config(args.train_cfg)
     dt_cfg = load_config(args.dt_cfg)
-    train_cfg['input_shape'] = dt_cfg['crop_size']
+    train_cfg['input_shape'] = dt_cfg['input_shape']
     train_cfg['batch_size'] = dt_cfg['batch_size']
     train_cfg['max_epochs'] = args.max_epochs
 

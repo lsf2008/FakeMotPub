@@ -7,24 +7,30 @@ from aemodel.abnEval import AeScore
 from sklearn.metrics import roc_auc_score
 import torch.optim.lr_scheduler as lrs
 import itertools
+from trainer import module_utils
 
 class MultRecLossModule(pytorch_lightning.LightningModule):
     def __init__(self, inputModel, **kwargs):
         super(MultRecLossModule, self).__init__()
-        self.save_hyperparameters()
-        self.model = inputModel(input_shape=self.hparams.input_shape, code_length=self.hparams.code_length)
+        self.save_hyperparameters(ignore='inputModel')
+        self.model = inputModel
+        if next(self.model.parameters()).device=='cpu':
+            self.model=self.model.cuda()
         # loss function
-        layers = [0]
+
+        layers = self.hparams.layers
         self.aeLoss = AeLoss(layers)
 
-        self.aeScore = AeScore(layers, batch_size= self.hparams.batch_size)
+        self.aeScore = AeScore(layers, batch_size=self.hparams.batch_size)
         # test results
         self.res={'maxAuc':0}
 
 
     def forward(self, x):
-        self.model(x)
 
+        x_r, z, enc_out, dec_out = self.model(x)
+        z = z.reshape(z.shape[0], -1)
+        return x_r, z, enc_out, dec_out
     def configure_optimizers(self):
         if hasattr(self.hparams, 'weight_decay'):
             weight_decay = self.hparams.weight_decay
@@ -51,98 +57,49 @@ class MultRecLossModule(pytorch_lightning.LightningModule):
     def training_step(self, batch, batch_idx):
         x = batch['video']
         x = x.reshape((-1, *x.shape[2:]))
-
         x_r, z, enc_out, dec_out = self(x)
 
         aeLss = self.aeLoss(x, x_r)
+        aeLss = aeLss.requires_grad_()
+        # print(f'------------x_r:{x_r.requires_grad},x:{x.requires_grad}--------------')
         logDic ={'aeLoss': aeLss}
-        self.log(logDic, prog_bar=True)
+        self.log_dict(logDic, prog_bar=True)
+
         return aeLss
 
     def validation_step(self, batch, batch_idx):
+        aeScore, y = self.tst_val_step(batch)
+        return (aeScore, y)
+
+    def validation_epoch_end(self, outputs):
+        self.tst_val_step_end(outputs, logStr='val_roc')
+    def test_step(self, batch, batch_idx):
+        return self.tst_val_step(batch)
+    def test_epoch_end(self, outputs):
+        return self.tst_val_step_end(outputs, logStr='tst_roc')
+
+    # ====================== my functions=========================
+    def tst_val_step(self, batch):
         x = batch['video']
         y = batch['label']
 
+        x = x.reshape((-1, *x.shape[2:]))
         x_r, z, enc_out, dec_out = self(x)
+
         # calculte anomaly score
         aeScore = self.aeScore(x, x_r)
+        if aeScore.requires_grad == False:
+            aeScore = aeScore.requires_grad_()
 
         return aeScore, y
 
-    def validation_step_end(self, outputs):
+    def tst_val_step_end(self, outputs, logStr='val_roc'):
         # obtain all scores and corresponding y
-        scores, y = self.obtAScoresFrmOutputs(outputs)
+        scores, y = module_utils.obtAScoresFrmOutputs(outputs)
+        self.res['epoch'] = self.current_epoch
 
         # compute auc, scores: dictory
-        self.cmpCmbAUCWght(scores, y_true=y,
-                           weight=self.hparams.cmbScoreWght, res=self.res)
+        module_utils.cmpCmbAUCWght(scores, y_true=y,
+                                   weight=self.hparams.cmbScoreWght, res=self.res)
 
-        self.res['epoch'] = self.current_epoch
-        self.log('auc', self.res['maxAuc'], prog_bar=True)
-
-
-
-    # ====================== my functions=========================
-    def obtAScoresFrmOutputs(self, outputs):
-        '''
-        # obtain all scores and corresponding y
-        :param outputs: validation or test end outputs
-        :return: dict{scores:}, label:list...
-
-        '''
-        aeScores = []
-        y_true = []
-        for i, out in enumerate(outputs):
-            aeScore, y = out
-            aeScores.extend(aeScore)
-            y_true.extend(y)
-
-        # normalize
-        aeScores = utils.normalize(aeScores)
-        scoreDic = {'aeScores': torch.tensor(aeScores)}
-
-        return scoreDic, y_true
-
-    def cmbScoreWght(self, scoreDic, weight=None):
-        '''
-        combine the scores with weight
-        :param scoreDic: score dic {'aeScore': tensor}
-        :param weight: list, lenght = len(scoreDic)
-        :return: tensor of combined score
-        '''
-        itms = len(scoreDic)
-        cmbScores = {}
-        if weight==None:
-            cmbScore = torch.zeros_like(list(scoreDic.values())[0])
-            for i, k, v in enumerate(scoreDic.items()):
-                cmbScore += v
-            cmbScores[1] = cmbScore
-        else:
-            for p in itertools.combinations(weight, itms):
-                cmbScore = torch.zeros_like(list(scoreDic.values())[0])
-                for i, k, v in enumerate(scoreDic.items()):
-                    cmbScore += v*p[i]
-                cmbScores[p]=cmbScore
-        return cmbScores
-
-
-    def cmpCmbAUCWght(self, scoreDic, weight, y_true, res):
-        '''
-        compute AUC for one weight and score
-        :param scoreDic: score dic {'aeScore': tensor}
-        :param weight: list, lenght = len(scoreDic)
-        :param y_true: groud truth
-        :param res: dictory to store results
-        :return: dictory
-        '''
-        cmbScores = self.cmbScoreWght(scoreDic, weight)
-
-        for k, v in cmbScores.items():
-            val_roc = roc_auc_score(y_true, v)
-
-            if res['maxAuc'] > val_roc:
-                res['maxAuc'] = val_roc
-                res['coef'] = k
-                res['label'] = y_true
-                res['score'] = v
-        return res
+        self.log(logStr, self.res['maxAuc'], prog_bar=True)

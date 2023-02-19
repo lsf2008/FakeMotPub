@@ -6,7 +6,7 @@ from aemodel.blocks_3d import DownsampleBlock
 from aemodel.blocks_3d import UpsampleBlock
 # from aemodel.estimator_2D import Estimator2D
 from aemodel.layers.tsc import TemporallySharedFullyConnection
-
+from pytorch_lightning.core.mixins import HyperparametersMixin
 
 class Encoder(BaseModule):
     """

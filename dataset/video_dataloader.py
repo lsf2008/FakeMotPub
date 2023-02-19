@@ -88,7 +88,7 @@ class VideoDataLoader(pytorch_lightning.LightningDataModule):
                  num_works=0,
                  mean=[0.45, 0.45, 0.45],
                  std=[0.225, 0.225, 0.225],
-                 crop_size=[1, 8, 32, 32],
+                 input_shape=[1, 8, 32, 32],
                  raw_shape=[1, 16, 360, 640],
                  num_frames=8,
                  frames_per_second=30,
@@ -127,7 +127,7 @@ class VideoDataLoader(pytorch_lightning.LightningDataModule):
                     Lambda(lambda x: x / 255.0),
                     # Normalize(self.hparams.mean, self.hparams.std),
                     NormalizeVideo(self.hparams.mean, self.hparams.std, True),
-                    ToCrops(self.hparams.raw_shape, self.hparams.crop_size)
+                    ToCrops(self.hparams.raw_shape, self.hparams.input_shape)
                 ]
             ),
         )
@@ -186,12 +186,12 @@ class VideoDataLoader(pytorch_lightning.LightningDataModule):
                         # UniformTemporalSubsample(self.hparams.num_frames),
 
                         ShortScaleImgs(size=self.hparams.side_shape),
-                        # CenterCropVideo(crop_size=(self.hparams.crop_size, self.hparams.crop_size)),
+                        # CenterCropVideo(input_shape=(self.hparams.input_shape, self.hparams.input_shape)),
                         # NormalizeVideo(self.hparams.mean, self.hparams.std),
                         RemoveBackground(128, self.bg),
                         Lambda(lambda x: x / 255.0),
                         NormalizeVideo(self.hparams.mean, self.hparams.std, True),
-                        ToCrops(self.hparams.raw_shape, self.hparams.crop_size)
+                        ToCrops(self.hparams.raw_shape, self.hparams.input_shape)
                     ]
                 )
             )]
@@ -209,7 +209,6 @@ class VideoDataLoader(pytorch_lightning.LightningDataModule):
         return self.val_testLoader(dtpth=self.hparams.val_dataPath)
 
     def test_dataloader(self):
-
         return self.val_testLoader(dtpth=self.hparams.tst_dataPath)
 
 
