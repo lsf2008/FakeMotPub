@@ -9,6 +9,8 @@ import numpy as np
 import pandas as pd
 from scipy.ndimage.morphology import binary_dilation
 import cv2
+import torch.nn  as nn
+import os
 # !/usr/bin/env python
 # -*- encoding: utf-8 -*-
 '''
@@ -104,6 +106,7 @@ def cmpAeDiff(x, x_r):
     x = x.reshape((b, t, c, h, w))
     x_r = x_r.reshape((b, t, c, h, w))
     r = torch.mean(torch.pow((x - x_r), 2), dim=list(range(x.dim() - 1, 0, -1)))
+    # r = nn.MSELoss(reduction='mean')(x, x_r)
     return r
 
 
@@ -525,6 +528,34 @@ def removeShtechBg(pth=r'E:/dataset/shanghaitech/training/frames', preStr='train
             im = mask*im
             svName = resFld+'/'+str(imN).split('\\')[-1]
             cv2.imwrite(svName, im)
+def cmpBgCv2(pth='E:/dataset/UCSD/UCSDped2/Train/',
+             type='*.tif',
+             svPth='dataset/bg/',
+             shwImg=False):
+    mog = cv2.bgsegm.createBackgroundSubtractorGSOC()
+    kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (3, 3))
+    imglst = getImgsFrmMulFlder(pth, type)
+    for imgN in imglst:
+        print(imgN)
+
+        fldPth = svPth + '\\' + str(imgN).split('\\')[-2]
+        if not os.path.exists(fldPth):
+            os.mkdir(fldPth)
+        imgName = fldPth + '\\' + str(imgN).split('\\')[-1]
+        # h,w,3
+        img = (cv2.imread(str(imgN)))
+        fg_mask = mog.apply(img)
+        fg_mask = cv2.morphologyEx(fg_mask, cv2.MORPH_OPEN, kernel)
+
+        fg_mask = fg_mask > 0
+        fg_mask = fg_mask.reshape((*fg_mask.shape, 1))
+        im = img * fg_mask
+        if shwImg:
+            plt.imshow(im)
+            plt.show()
+            plt.pause(0.6)
+            plt.close()
+        cv2.imwrite(imgName, im)
 
 if __name__ == '__main__':
     # x = torch.randn((5, 3, 8, 32, 32)).cuda()
@@ -570,8 +601,8 @@ if __name__ == '__main__':
 
 
     # --------------mean std-----------------
-    # cfgPth = 'config/dtsht_cfg.yml'
-    cfgPth = 'config/dtped2_cfg.yml'
+    cfgPth = 'config/ped2_cfg.yml'
+    # cfgPth = 'config/dtped2_cfg.yml'
     cmpMeanStd(cfgPth)
 
 
@@ -580,3 +611,10 @@ if __name__ == '__main__':
     # removeShtechBg(pth, preStr='train', thr=128)
     # im = cv2.cvtColor(cv2.imread('dataset/bg/1009.jpg'), cv2.COLOR_BGR2RGB)
     # torch.save(im, 'dataset/bg/train_01_bg1.pt')
+
+    # ---------------compute background---------------
+    # pth = r'E:\dataset\Avenue\Test'
+    # type = '*.jpg'
+    # svPth = r'E:\dataset\Avenue\rebg\Test'
+    # shwImg = False
+    # cmpBgCv2(pth, type, svPth, shwImg)

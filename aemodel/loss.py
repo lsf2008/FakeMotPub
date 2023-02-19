@@ -84,8 +84,9 @@ class AeLoss(AeBaseLoss):
         #
         #     ls = torch.mean(torch.tensor(lss))
         ls = super(AeLoss, self).forward(x, x_r)
-        ls = [torch.mean(r) for r in ls]
-        ls = torch.mean(torch.tensor(ls))
+        # ls = [torch.mean(r) for r in ls]
+        # ls = torch.mean(torch.tensor(ls, device='cuda'))
+        ls = torch.mean(ls)
         return ls
         # return torch.max(L)
 

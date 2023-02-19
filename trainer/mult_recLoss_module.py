@@ -14,8 +14,8 @@ class MultRecLossModule(pytorch_lightning.LightningModule):
         super(MultRecLossModule, self).__init__()
         self.save_hyperparameters(ignore='inputModel')
         self.model = inputModel
-        if next(self.model.parameters()).device=='cpu':
-            self.model=self.model.cuda()
+        # if not next(self.model.parameters()).is_cuda:
+        #     self.model=self.model.cuda()
         # loss function
 
         layers = self.hparams.layers
@@ -60,7 +60,6 @@ class MultRecLossModule(pytorch_lightning.LightningModule):
         x_r, z, enc_out, dec_out = self(x)
 
         aeLss = self.aeLoss(x, x_r)
-        aeLss = aeLss.requires_grad_()
         # print(f'------------x_r:{x_r.requires_grad},x:{x.requires_grad}--------------')
         logDic ={'aeLoss': aeLss}
         self.log_dict(logDic, prog_bar=True)
@@ -96,10 +95,12 @@ class MultRecLossModule(pytorch_lightning.LightningModule):
     def tst_val_step_end(self, outputs, logStr='val_roc'):
         # obtain all scores and corresponding y
         scores, y = module_utils.obtAScoresFrmOutputs(outputs)
-        self.res['epoch'] = self.current_epoch
+        # self.res['epoch'] = self.current_epoch
 
         # compute auc, scores: dictory
         module_utils.cmpCmbAUCWght(scores, y_true=y,
-                                   weight=self.hparams.cmbScoreWght, res=self.res)
+                                   weight=self.hparams.cmbScoreWght,
+                                   res=self.res,
+                                   epoch=self.current_epoch)
 
         self.log(logStr, self.res['maxAuc'], prog_bar=True)

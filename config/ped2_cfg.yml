@@ -4,20 +4,20 @@ num_frames: &num_frames 16
 
 #set as your own path
 #ped2 dataset
-train_dataPath: 'E:/dataset/UCSD/UCSDped2/label/train.csv'
-val_dataPath: 'E:/dataset/UCSD/UCSDped2/label/test.csv'
-tst_dataPath: 'E:/dataset/UCSD/UCSDped2/label/test.csv'
+train_dataPath: 'E:/dataset/UCSD/UCSDped2/label/train_rebg.csv'
+val_dataPath: 'E:/dataset/UCSD/UCSDped2/label/test_rebg.csv'
+tst_dataPath: 'E:/dataset/UCSD/UCSDped2/label/test_rebg.csv'
 
 #background for ped2 dataset
 bgPth: 'dataset/bg/ped2Bg.pt'
 
 #removing the background 48*48
-#mean: [0.0310, 0.0310, 0.0310]
-#std: [0.1997, 0.1895, 0.1909]
+mean: [-0.1951, -0.1951, -0.1951]
+std: [0.4289, 0.4289, 0.4289]
 
-#64*64
-mean: [0.0284, 0.0284, 0.0284]
-std: [0.1138, 0.1138, 0.1138]
+#-bg
+#mean: [0.0284, 0.0284, 0.0284]
+#std: [0.1138, 0.1138, 0.1138]
 
 frames_per_second: 30
 # side_size: 200
@@ -25,7 +25,7 @@ frames_per_second: 30
 input_shape: [3, 8, 40, 40] # patch size h,w is x*4
 
 # device_number: 1
-batch_size: 3
+batch_size: 5
 num_works: 0
 #ped2
 #shortSide_size: 240 # resized short size of video frame and keep the width/height radio

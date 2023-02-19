@@ -58,7 +58,7 @@ def initial_params(cfgPth='ped2_cfg.yml'):
     parser.add_argument('--devices', default=1, type=int)
     parser.add_argument('--accelerator', type=str, default='gpu')
     parser.add_argument('--max_epochs', type=int, default=300)
-    parser.add_argument('--precision', type=int, default=32)
+    parser.add_argument('--precision', type=int, default=16)
 
     # 配置优化策略
     # parser.add_argument('--lr_scheduler', type=str, choices=['step', 'cosine'], default='step')
