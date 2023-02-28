@@ -65,8 +65,30 @@ def calAUC(prob, labels):
     auc = (sum(rankList) - (posNum * (posNum + 1)) / 2) / (posNum * negNum)
     # print(auc)
     return auc
+def filterCrops(x, thr=0.01):
+    '''
+    remove background
+    Parameters
+    ----------
+    x:      n, c, t, h, w
+    thr:    threshold
+    Returns
+    -------
+    '''
 
+    x = x.reshape((-1, *x.shape[2:]))
+    bt = x.shape[0]
+    x1 = x > 0.001
 
+    xn = []
+
+    v = torch.prod(torch.tensor(x1.shape[1:])) * thr
+    for i in range(bt):
+        t = x[i]
+        # print(torch.sum(x1[i,:,:,:,:]) )
+        if torch.sum(x1[i]) > v:
+            xn.append(t)
+    return torch.stack(xn)
 def cmpCmbAUCWght(scoreDic, weight, y_true, res, epoch):
     '''
     compute AUC for one weight and score
@@ -84,11 +106,12 @@ def cmpCmbAUCWght(scoreDic, weight, y_true, res, epoch):
         y_true[0]=1
     if epoch:
         for k, v in cmbScores.items():
+            # y_true = [i.detach().cpu() for i in y_true]
+            # v = v.detach().cpu()
             # val_roc = roc_auc_score(y_true, v)
             val_roc = calAUC(v, y_true)
-            print('/n')
+            print()
             print(f'current auc:{val_roc}'.center(100, '-'))
-
             if res['maxAuc'] < val_roc:
                 res['maxAuc'] = val_roc
                 res['coef'] = k
@@ -96,4 +119,10 @@ def cmpCmbAUCWght(scoreDic, weight, y_true, res, epoch):
                 res['score'] = v
                 res['epoch'] = epoch
     return res
+if __name__=='__main__':
+    x = torch.rand((120, 3, 8, 64, 64))
+    y = filterCrops(x, 0.1)
+    print(y.shape)
+    # obj = FilterCrops()
+    # print(obj.shape)
 

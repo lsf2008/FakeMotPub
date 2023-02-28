@@ -16,6 +16,7 @@ import pytorchvideo.data as vd
 import torch.utils.data as td
 import matplotlib.pyplot as plt
 import os
+
 import numpy as np
 from pytorchvideo.transforms import (
     ApplyTransformToKey,
@@ -45,7 +46,7 @@ from dataset.my_video_dataset import labeled_video_dataset
 import torch
 import math
 
-from dataset.transform import ToGrays, ToCrops, RemoveBackground, ShortScaleImgs, MyColorJitter
+from dataset.transform import FilterCrops, ToCrops, RemoveBackground, ShortScaleImgs, MyColorJitter
 
 os.environ["KMP_DUPLICATE_LIB_OK"] = "TRUE"
 
@@ -123,11 +124,12 @@ class VideoDataLoader(pytorch_lightning.LightningDataModule):
                     # UniformTemporalSubsample(self.hparams.num_frames),
                     # Lambda(lambda x: x / 255.0),
                     ShortScaleImgs(size=self.hparams.side_shape),
-                    # RemoveBackground(128, self.bg),
+                    RemoveBackground(128, self.bg),
                     Lambda(lambda x: x / 255.0),
                     # Normalize(self.hparams.mean, self.hparams.std),
-                    NormalizeVideo(self.hparams.mean, self.hparams.std, True),
-                    ToCrops(self.hparams.raw_shape, self.hparams.input_shape)
+                    # NormalizeVideo(self.hparams.mean, self.hparams.std, True),
+                    ToCrops(self.hparams.raw_shape, self.hparams.input_shape),
+                    # FilterCrops(0.01),
                 ]
             ),
         )
@@ -190,8 +192,9 @@ class VideoDataLoader(pytorch_lightning.LightningDataModule):
                         # NormalizeVideo(self.hparams.mean, self.hparams.std),
                         # RemoveBackground(128, self.bg),
                         Lambda(lambda x: x / 255.0),
-                        NormalizeVideo(self.hparams.mean, self.hparams.std, True),
-                        ToCrops(self.hparams.raw_shape, self.hparams.input_shape)
+                        # NormalizeVideo(self.hparams.mean, self.hparams.std, True),
+                        ToCrops(self.hparams.raw_shape, self.hparams.input_shape),
+                        # FilterCrops(0.01),
                     ]
                 )
             )]

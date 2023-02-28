@@ -32,11 +32,11 @@ class Encoder(BaseModule):
         # Convolutional network
         self.conv = nn.Sequential(
             DownsampleBlock(channel_in=c, channel_out=8, activation_fn=activation_fn, stride=(1, 2, 2)),
-            DownsampleBlock(channel_in=8, channel_out=16, activation_fn=activation_fn, stride=(1, 2, 1)),
+            DownsampleBlock(channel_in=8, channel_out=16, activation_fn=activation_fn, stride=(2, 2, 2)),
             DownsampleBlock(channel_in=16, channel_out=32, activation_fn=activation_fn, stride=(2, 1, 2)),
             # stride=(1,2,2)-->(2,2,1)
             DownsampleBlock(channel_in=32, channel_out=64, activation_fn=activation_fn, stride=(2, 2, 1)),
-            DownsampleBlock(channel_in=64, channel_out=64, activation_fn=activation_fn, stride=(2, 1, 2))
+            # DownsampleBlock(channel_in=64, channel_out=64, activation_fn=activation_fn, stride=(2, 1, 2))
         )
 
         self.deepest_shape = (64, t // 8, h // 8, w // 8)
@@ -278,9 +278,9 @@ class Decoder(BaseModule):
                           activation_fn=activation_fn, stride=(2, 1, 2), output_padding=(1, 0, 1)),
             UpsampleBlock(channel_in=16, channel_out=8,
                           activation_fn=activation_fn, stride=(1, 2, 1), output_padding=(0, 1, 0)),
-            UpsampleBlock(channel_in=8, channel_out=8,
+            UpsampleBlock(channel_in=8, channel_out=output_shape[0],
                           activation_fn=activation_fn, stride=(1, 2, 2), output_padding=(0, 1, 1)),
-            nn.Conv3d(in_channels=8, out_channels=output_shape[0], kernel_size=1, bias=False)
+            # nn.Conv3d(in_channels=8, out_channels=output_shape[0], kernel_size=1, bias=False)
         )
 
     # noinspection LanguageDetectionInspection

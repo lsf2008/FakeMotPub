@@ -21,7 +21,7 @@ class MaskedConv3d(BaseModule, nn.Conv3d):
         self.register_buffer('mask', self.weight.data.clone())
         _, _, kT, kH, kW = self.weight.size()
         self.mask.fill_(1)
-        self.mask[:, :, kT // 2 + 1:] = 0
+        # self.mask[:, :, kT // 2 + 1:] = 0
 
     def forward(self, x):
         # type: (torch.Tensor) -> torch.Tensor

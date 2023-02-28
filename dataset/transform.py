@@ -15,6 +15,30 @@ class MyColorJitter(ColorJitter):
         x = super().forward(x)
         x = x.permute(1,0,2,3)
         return x
+
+class FilterCrops(object):
+    def __init__(self, thr=0.1):
+        self.thr = thr
+    def __call__(self, x):
+        '''
+        Parameters
+        ----------
+        x；c, t, h, w
+        Returns
+        -------
+        '''
+        x1= x >0.001
+        bt = x.shape[0]
+        xn = []
+        v = torch.prod(torch.tensor(x1.shape[1:])) * self.thr
+        for i in range(bt):
+            t = x[i, :, :, :, :]
+            # print(torch.sum(x1[i,:,:,:,:]) )
+            if torch.sum(x1[i,:,:,:,:]) > v:
+                xn.append(t)
+        return torch.stack(xn)
+
+
 class ToCrops(object):
     """ Crops input clips """
 
