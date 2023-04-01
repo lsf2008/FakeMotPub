@@ -32,11 +32,11 @@ class Encoder(BaseModule):
         # Convolutional network
         self.conv = nn.Sequential(
             DownsampleBlock(channel_in=c, channel_out=8, activation_fn=activation_fn, stride=(1, 2, 2)),
-            DownsampleBlock(channel_in=8, channel_out=16, activation_fn=activation_fn, stride=(2, 2, 2)),
+            DownsampleBlock(channel_in=8, channel_out=16, activation_fn=activation_fn, stride=(1, 2, 1)),
             DownsampleBlock(channel_in=16, channel_out=32, activation_fn=activation_fn, stride=(2, 1, 2)),
             # stride=(1,2,2)-->(2,2,1)
             DownsampleBlock(channel_in=32, channel_out=64, activation_fn=activation_fn, stride=(2, 2, 1)),
-            # DownsampleBlock(channel_in=64, channel_out=64, activation_fn=activation_fn, stride=(2, 1, 2))
+            DownsampleBlock(channel_in=64, channel_out=64, activation_fn=activation_fn, stride=(2, 1, 2))
         )
 
         self.deepest_shape = (64, t // 8, h // 8, w // 8)
@@ -348,6 +348,21 @@ class AeMultiOut(BaseModule):
             output_shape=input_shape
         )
 
+        self.init_params()
+    def init_params(self):
+        self._init_params(self.encoder)
+        self._init_params(self.decoder)
+    def _init_params(self, model):
+        for m in model.modules():
+            if isinstance(m, nn.Linear):
+                # 使用均匀分布初始化权重和偏置
+                torch.nn.init.uniform_(m.weight, -0.1, 0.1)
+                if m.bias:
+                    torch.nn.init.uniform_(m.bias, -0.1, 0.1)
+            if isinstance(m, nn.Conv3d):
+                torch.nn.init.xavier_uniform_(m.weight)
+                if m.bias:
+                    torch.nn.init.xavier_uniform_(m.bias)
     def forward(self, x):
         # type: (torch.Tensor) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor]
         """

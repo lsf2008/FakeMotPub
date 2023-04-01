@@ -36,6 +36,7 @@ from torchvision.transforms import (
     RandomHorizontalFlip,
     ColorJitter,
     Grayscale,
+    ToTensor,
 )
 from torchvision.transforms._transforms_video import (
     CenterCropVideo,
@@ -125,9 +126,10 @@ class VideoDataLoader(pytorch_lightning.LightningDataModule):
                     # Lambda(lambda x: x / 255.0),
                     ShortScaleImgs(size=self.hparams.side_shape),
                     RemoveBackground(128, self.bg),
+
                     Lambda(lambda x: x / 255.0),
                     # Normalize(self.hparams.mean, self.hparams.std),
-                    # NormalizeVideo(self.hparams.mean, self.hparams.std, True),
+                    NormalizeVideo(self.hparams.mean, self.hparams.std, True),
                     ToCrops(self.hparams.raw_shape, self.hparams.input_shape),
                     # FilterCrops(0.01),
                 ]
@@ -190,9 +192,9 @@ class VideoDataLoader(pytorch_lightning.LightningDataModule):
                         ShortScaleImgs(size=self.hparams.side_shape),
                         # CenterCropVideo(input_shape=(self.hparams.input_shape, self.hparams.input_shape)),
                         # NormalizeVideo(self.hparams.mean, self.hparams.std),
-                        # RemoveBackground(128, self.bg),
+                        RemoveBackground(128, self.bg),
                         Lambda(lambda x: x / 255.0),
-                        # NormalizeVideo(self.hparams.mean, self.hparams.std, True),
+                        NormalizeVideo(self.hparams.mean, self.hparams.std, True),
                         ToCrops(self.hparams.raw_shape, self.hparams.input_shape),
                         # FilterCrops(0.01),
                     ]

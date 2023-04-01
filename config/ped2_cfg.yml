@@ -5,8 +5,8 @@ num_frames: &num_frames 16
 #set as your own path
 #ped2 dataset
 train_dataPath: 'E:/dataset/UCSD/UCSDped2/label/train.csv'
-val_dataPath: 'E:/dataset/UCSD/UCSDped2/label/test_rebg.csv'
-tst_dataPath: 'E:/dataset/UCSD/UCSDped2/label/test_rebg.csv'
+val_dataPath: 'E:/dataset/UCSD/UCSDped2/label/test.csv'
+tst_dataPath: 'E:/dataset/UCSD/UCSDped2/label/test.csv'
 
 #background for ped2 dataset
 bgPth: 'dataset/bg/ped2Bg.pt'
@@ -38,7 +38,7 @@ raw_shape: [3, *num_frames, 240, 360] # original size of video frame
 train_dt_sampler: 'random'
 val_dt_sampler: 'uniform'
 stride: 16
-layers: [0,1]
+layers: [0,1,2]
 
 
 #=====================train=====================

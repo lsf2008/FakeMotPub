@@ -9,9 +9,9 @@ import torch.optim.lr_scheduler as lrs
 import itertools
 from trainer import module_utils
 
-class MultRecLossModule(pytorch_lightning.LightningModule):
+class MultRecLossModuleFinch(pytorch_lightning.LightningModule):
     def __init__(self, inputModel, **kwargs):
-        super(MultRecLossModule, self).__init__()
+        super(MultRecLossModuleFinch, self).__init__()
         self.save_hyperparameters(ignore='inputModel')
         self.model = inputModel
         # if not next(self.model.parameters()).is_cuda:
@@ -27,13 +27,51 @@ class MultRecLossModule(pytorch_lightning.LightningModule):
         # test results
         self.res={'maxAuc':0}
 
-
     def forward(self, x):
 
         x_r, z, enc_out, dec_out = self.model(x)
         x_r=self.model(x)
         z = z.reshape(z.shape[0], -1)
         return x_r
+
+
+    def training_step(self, batch, batch_idx):
+        x = batch['video']
+        # x = module_utils.filterCrops(x)
+
+        x = x.reshape((-1, *x.shape[2:]))
+        # x_r= self(x)
+        x_r, z, enc_out, dec_out = self.model(x)
+
+        # aeLss = self.aeLoss(x, x_r)
+        aeLss = self.aeLoss(enc_out, dec_out)
+        # print(f'------------x_r:{x_r.requires_grad},x:{x.requires_grad}--------------')
+        logDic ={'loss': aeLss}
+        self.log_dict(logDic, prog_bar=True)
+        # 600*1*64-->600*64
+        logDic['embFea'] = z.reshape(-1, z.shape[-1])
+        return logDic
+
+    def training_epoch_end(self, outputs):
+        embFea = []
+        for z1 in outputs:
+            # print(z1['embFea'].shape)
+            embFea.append(z1['embFea'])
+
+        embFea = torch.cat(embFea, dim=0)
+
+        # finch
+
+    def validation_step(self, batch, batch_idx):
+        aeScore, y = self.tst_val_step(batch)
+        return (aeScore, y)
+
+    def validation_epoch_end(self, outputs):
+        self.tst_val_step_end(outputs, logStr='val_roc')
+    def test_step(self, batch, batch_idx):
+        return self.tst_val_step(batch)
+    def test_epoch_end(self, outputs):
+        return self.tst_val_step_end(outputs, logStr='tst_roc')
     def configure_optimizers(self):
         if hasattr(self.hparams, 'weight_decay'):
             weight_decay = self.hparams.weight_decay
@@ -56,33 +94,6 @@ class MultRecLossModule(pytorch_lightning.LightningModule):
             else:
                 raise ValueError('Invalide lr_scheduler type!')
         return [optimizer], [scheduler]
-
-    def training_step(self, batch, batch_idx):
-        x = batch['video']
-        # x = module_utils.filterCrops(x)
-
-        x = x.reshape((-1, *x.shape[2:]))
-        # x_r= self(x)
-        x_r, z, enc_out, dec_out = self.model(x)
-
-        # aeLss = self.aeLoss(x, x_r)
-        aeLss = self.aeLoss(enc_out, dec_out)
-        # print(f'------------x_r:{x_r.requires_grad},x:{x.requires_grad}--------------')
-        logDic ={'aeLoss': aeLss}
-        self.log_dict(logDic, prog_bar=True)
-
-        return aeLss
-
-    def validation_step(self, batch, batch_idx):
-        aeScore, y = self.tst_val_step(batch)
-        return (aeScore, y)
-
-    def validation_epoch_end(self, outputs):
-        self.tst_val_step_end(outputs, logStr='val_roc')
-    def test_step(self, batch, batch_idx):
-        return self.tst_val_step(batch)
-    def test_epoch_end(self, outputs):
-        return self.tst_val_step_end(outputs, logStr='tst_roc')
 
     # ====================== my functions=========================
     def tst_val_step(self, batch):
