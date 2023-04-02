@@ -16,6 +16,7 @@ import torch
 from aemodel.OneClsBase import OneClassBase
 from torch import nn
 import utils as utils
+from itertools import chain
 
 class AeBaseLoss(BaseModule):
     def __init__(self, stdInd):
@@ -85,7 +86,7 @@ class AeLoss(AeBaseLoss):
         ls = super(AeLoss, self).forward(x, x_r)
         # ls = [torch.mean(r) for r in ls]
         # ls = torch.mean(torch.tensor(ls, device='cuda'))
-        ls = torch.mean((ls))
+        ls = torch.mean(list(*chain(ls)))
         return ls
         # return torch.max(L)
 
