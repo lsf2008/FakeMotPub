@@ -1,6 +1,6 @@
 
 from dataset.video_dataloader import VideoDataLoader
-from trainer.mult_ae_recLoss_module import MultRecLossModule
+from trainer.mult_ae_recLoss_module import MultAERecLossModule
 import pytorch_lightning as pl
 
 def train_trainer(args, model):
@@ -9,7 +9,7 @@ def train_trainer(args, model):
     val_dl = vd.val_dataloader()
 
     # inmd = model(**vars(args))
-    mdl = MultRecLossModule(model, **vars(args))
+    mdl = MultAERecLossModule(model, **vars(args))
     trainer = pl.Trainer.from_argparse_args(args)
     trainer.fit(mdl, train_dataloaders=train_dl, val_dataloaders=val_dl)
     # trainer.test(dataloaders=val_dl, ckpt_path='best')
