@@ -1,6 +1,6 @@
 
 from dataset.video_dataloader import VideoDataLoader
-from trainer.mult_recLoss_module import MultRecLossModule
+from trainer.mult_ae_recLoss_module import MultRecLossModule
 import pytorch_lightning as pl
 
 def train_trainer(args, model):

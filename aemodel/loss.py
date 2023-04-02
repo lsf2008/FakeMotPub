@@ -35,7 +35,6 @@ class AeBaseLoss(BaseModule):
             for i in self.stdInd:
                 enc_out.append(x[i])
                 dec_out.append(x_r[i])
-
             ls = [(utils.cmpAeDiff(i, j)) for i, j in zip(enc_out, dec_out)]
         else:
             ls = utils.cmpAeDiff(x, x_r)

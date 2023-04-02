@@ -172,8 +172,10 @@ def cmpTimGrd(x):
     '''
     # b, c, t, h, w = x.shape
     # x = x.reshape((b, t, c, h, w))
-    xi = x[:, :, 1:, :, :]
-    xj = x[:, :, 0:-1, :, :]
+    # xi = x[:, :, 1:, :, :]
+    # xj = x[:, :, 0:-1, :, :]
+    xi = x[:, 1:, :, :, :]
+    xj = x[:, 0:-1, :, :, :]
 
     return torch.abs(xi - xj)
 
@@ -244,7 +246,6 @@ def cmpTimGrdDiffL2(x, x_r):
 
 def cmpTimGrdDiff(x, x_r):
     '''
-
     :param x: tensor with(b,c,t,h,w)
     :param x_r: tensor with(b,c,t,h,w)
     :return: scalar (b,)

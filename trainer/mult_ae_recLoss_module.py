@@ -9,9 +9,9 @@ import torch.optim.lr_scheduler as lrs
 import itertools
 from trainer import module_utils
 
-class MultRecLossModule(pytorch_lightning.LightningModule):
+class MultAERecLossModule(pytorch_lightning.LightningModule):
     def __init__(self, inputModel, **kwargs):
-        super(MultRecLossModule, self).__init__()
+        super(MultAERecLossModule, self).__init__()
         self.save_hyperparameters(ignore='inputModel')
         self.model = inputModel
         # if not next(self.model.parameters()).is_cuda:
@@ -20,7 +20,7 @@ class MultRecLossModule(pytorch_lightning.LightningModule):
 
         layers = self.hparams.layers
         self.aeLoss = AeLoss(layers)
-        self.motLoss = TimeGrdLoss()
+        # self.motLoss = TimeGrdLoss()
 
         self.aeScore = AeScore(layers, batch_size=self.hparams.batch_size)
         self.motScore = TimeGrdScore(self.hparams.batch_size)
