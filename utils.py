@@ -44,7 +44,7 @@ def initial_params(train_cfg='config/ave_train_cfg.yaml', dt_cfg='config/dtped2_
     parser.add_argument('--check_val_every_n_epoch', type=int, default=10)
     parser.add_argument('--devices', default=1, type=int)
     parser.add_argument('--accelerator', type=str, default='gpu')
-    parser.add_argument('--max_epochs', type=int, default=500)
+    parser.add_argument('--max_epochs', type=int, default=300)
     parser.add_argument('--precision', type=int, default=16)
 
     # 配置优化策略
@@ -93,7 +93,7 @@ def normalize(samples):
     if len(samples) != 0:
         maxs, mins = cmp_normalize_coef(samples)
         # if maxs-mins!=0:
-        return (samples - mins) / (maxs - mins + 0.000000001)
+        return (samples - mins) / (maxs - mins + 1e-7)
 
 
 def cmpAeDiff(x, x_r):
@@ -287,7 +287,7 @@ def psnr_error(gen_frames, gt_frames):
     square_diff = (gt_frames - gen_frames) ** 2
     # maxf=torch.max(gen_frames)
     batch_errors = 10 * log10(1. / ((1. / num_pixels) * torch.sum(square_diff, [2, 4, 5])))
-    return 1 / (torch.mean(batch_errors, [2, 1]) + 0.000000001)
+    return 1 / (torch.mean(batch_errors, [2, 1]) + 1e-7)
 
 
 def load_callbacks(args):

@@ -20,7 +20,7 @@ class MultMotRecLossModule(pytorch_lightning.LightningModule):
 
         layers = self.hparams.layers
         # self.aeLoss = AeLoss(layers)
-        self.motLoss = TimeGrdLoss()
+        self.motLoss = TimeGrdLoss(layers)
 
         self.aeScore = AeScore(layers, batch_size=self.hparams.batch_size)
         self.motScore = TimeGrdScore(self.hparams.batch_size)
@@ -66,7 +66,7 @@ class MultMotRecLossModule(pytorch_lightning.LightningModule):
         x_r, z, enc_out, dec_out = self.model(x)
 
         # aeLss = self.aeLoss(x, x_r)
-        aeLss = self.aeLoss(enc_out, dec_out)
+        aeLss = self.motLoss(enc_out, dec_out)
         # print(f'------------x_r:{x_r.requires_grad},x:{x.requires_grad}--------------')
         logDic ={'aeLoss': aeLss}
         self.log_dict(logDic, prog_bar=True)

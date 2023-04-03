@@ -55,38 +55,13 @@ class AeLoss(AeBaseLoss):
         Returns
         -------
         '''
-        # if isinstance(self.stdInd, int):
-        #     if isinstance(x, torch.Tensor) and isinstance(x_r, torch.Tensor):
-        #     # L = torch.sum(torch.pow((x - x_r), 2), dim=list(range(x.dim()-1, 0, -1)))
-        #         L = utils.cmpAeDiff(x, x_r)
-        #         ls = torch.mean(L)
-        #
-        #     if isinstance(x, list) and isinstance(x_r, list):
-        #         x_r = list(reversed(x_r))
-        #         enc_out=x[:self.stdInd]
-        #         dec_out = x_r[:self.stdInd]
-        #
-        #         # if self.stdInd!=0:
-        #         #     enc_out.append(x[0])
-        #         #     dec_out.append(x_r[0])
-        #         lss = [torch.mean(utils.cmpAeDiff(i, j)) for i, j in zip(enc_out, dec_out)]
-        #
-        #         ls = torch.mean(torch.tensor(lss))
-        # if isinstance(self.stdInd, list):
-        #     x_r = list(reversed(x_r))
-        #     enc_out = []
-        #     dec_out = []
-        #     for i in self.stdInd:
-        #         enc_out.append(x[i])
-        #         dec_out.append(x_r[i])
-        #
-        #     lss = [(utils.cmpAeDiff(i, j)) for i, j in zip(enc_out, dec_out)]
-        #
-        #     ls = torch.mean(torch.tensor(lss))
-        ls = super(AeLoss, self).forward(x, x_r)
-        # ls = [torch.mean(r) for r in ls]
-        # ls = torch.mean(torch.tensor(ls, device='cuda'))
-        ls = torch.mean(list(*chain(ls)))
+
+        ls1 = super(AeLoss, self).forward(x, x_r)
+        # ls = [torch.mean(r) for r in ls1]
+
+        # ls = torch.mean(torch.tensor(ls)).cuda().requires_grad_(True)
+        ls = torch.mean(ls1[0])
+
         return ls
         # return torch.max(L)
 
@@ -106,7 +81,25 @@ class GradientLoss(BaseModule):
         ls = utils.cmpGrdDiff(x, x_r)
         return torch.mean(ls)
 
-class TimeGrdLoss(BaseModule):
+class TimeBaseLoss(BaseModule):
+    def __init__(self, stdInd):
+        super(TimeBaseLoss, self).__init__()
+        self.stdInd = stdInd
+
+    def forward(self, x, x_r):
+        if isinstance(x, list) and isinstance(x_r, list):
+            x_r = list(reversed(x_r))
+            enc_out = []
+            dec_out = []
+            for i in self.stdInd:
+                enc_out.append(x[i])
+                dec_out.append(x_r[i])
+            ls = [(utils.cmpTimGrdDiff(i, j)) for i, j in zip(enc_out, dec_out)]
+            ls = ls[0]
+        else:
+            ls = utils.cmpTimGrdDiff(x, x_r)
+        return ls
+class TimeGrdLoss(TimeBaseLoss):
     def __int__(self):
         super(TimeGrdLoss, self).__int__()
 
@@ -114,7 +107,7 @@ class TimeGrdLoss(BaseModule):
         '''
         x, x_r   patches_per_batch*3*8*h*w
         '''
-        ls = utils.cmpTimGrdDiff(x, x_r)
+        ls = super(TimeGrdLoss, self).forward(x, x_r)
 
         return torch.mean(ls)
 

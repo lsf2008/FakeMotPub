@@ -57,7 +57,7 @@ def initial_params(cfgPth='ped2_cfg.yml'):
     parser.add_argument('--check_val_every_n_epoch', type=int, default=10)
     parser.add_argument('--devices', default=1, type=int)
     parser.add_argument('--accelerator', type=str, default='gpu')
-    parser.add_argument('--max_epochs', type=int, default=300)
+    parser.add_argument('--max_epochs', type=int, default=500)
     parser.add_argument('--precision', type=int, default=16)
 
     # 配置优化策略

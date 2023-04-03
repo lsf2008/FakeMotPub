@@ -67,6 +67,7 @@ class MultAERecLossModule(pytorch_lightning.LightningModule):
 
         # aeLss = self.aeLoss(x, x_r)
         aeLss = self.aeLoss(enc_out, dec_out)
+
         # print(f'------------x_r:{x_r.requires_grad},x:{x.requires_grad}--------------')
         logDic ={'aeLoss': aeLss}
         self.log_dict(logDic, prog_bar=True)
