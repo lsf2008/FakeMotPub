@@ -22,7 +22,7 @@ std: [0.4289, 0.4289, 0.4289]
 frames_per_second: 30
 # side_size: 200
 #if shortSide_size: 160, and crop_size: [3, 8, 160, 280], do the detection on whole image
-input_shape: [3, 8, 40, 40] # patch size h,w is x*4
+input_shape: [3, 8, 48, 48] # patch size h,w is x*4
 
 # device_number: 1
 batch_size: 5
@@ -38,7 +38,7 @@ raw_shape: [3, *num_frames, 240, 360] # original size of video frame
 train_dt_sampler: 'random'
 val_dt_sampler: 'uniform'
 stride: 16
-layers: [0]
+layers: [0,1]
 
 
 #=====================train=====================

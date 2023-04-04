@@ -80,7 +80,7 @@ if flg =='ped2_mot':
         model = AeMultiOut(input_shape=args.input_shape,
                        code_length=args.code_length)
 
-        res = train_trainer(args, model)
+
         tbl.add_row([layer, res['maxAuc']])
     end_time = time.time()
     print(tbl)

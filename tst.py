@@ -8,7 +8,7 @@ from trainer.mult_mot_recLoss_module import MultMotRecLossModule
 from trainer.mult_recLoss_module_finch import MultRecLossModuleFinch
 import pytorch_lightning as pl
 import time
-pl.seed_everything(999999)
+pl.seed_everything(555555)
 flg = 'ped2'
 
 if flg =='ped2':
@@ -33,21 +33,21 @@ if flg =='ped2':
     print(f'running time:{(end_time - stat_time) / 60} m')
 
     # ===================AE+ FINCH==================
-    stat_time = time.time()
-    args = initial_params('config/ped2_cfg.yml')
-    # 数据集
-    vd = VideoDataLoader(**vars(args))
-    # 模型
-    model = AeMultiOut(input_shape=args.input_shape,
-                       code_length=args.code_length)
-    # module
-    mdl = MultRecLossModuleFinch(model, **vars(args))
-    # mdl = MultRecLossModule(model, **vars(args))
-
-    # 使用module训练模型
-    res = trainer_vd_module(args, mdl, vd)
-    end_time = time.time()
-    print(f'running time:{(end_time - stat_time) / 60} m')
+    # stat_time = time.time()
+    # args = initial_params('config/ped2_cfg.yml')
+    # # 数据集
+    # vd = VideoDataLoader(**vars(args))
+    # # 模型
+    # model = AeMultiOut(input_shape=args.input_shape,
+    #                    code_length=args.code_length)
+    # # module
+    # mdl = MultRecLossModuleFinch(model, **vars(args))
+    # # mdl = MultRecLossModule(model, **vars(args))
+    #
+    # # 使用module训练模型
+    # res = trainer_vd_module(args, mdl, vd)
+    # end_time = time.time()
+    # print(f'running time:{(end_time - stat_time) / 60} m')
 if flg =='ave':
     args = initial_params('config/ave_cfg.yml')
 

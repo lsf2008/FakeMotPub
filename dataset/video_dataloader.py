@@ -98,7 +98,11 @@ class VideoDataLoader(pytorch_lightning.LightningDataModule):
                  **kwargs):
         super(VideoDataLoader, self).__init__()
 
-        self.save_hyperparameters(ignore='inputModel')
+        self.save_hyperparameters(ignore=['inputModel','layers',
+                                          'weight_decay','lr_scheduler','lr',
+                                          'lr_decay_steps','lr_decay_rate',
+                                          'lr_decay_min_lr','cmbScoreWght',
+                                          ])
         self.hparams.raw_shape = updtRawShape(raw_shape, shortSide_size)
         self.hparams.side_shape = self.hparams.raw_shape[2:]
 
