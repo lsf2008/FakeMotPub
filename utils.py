@@ -172,10 +172,8 @@ def cmpTimGrd(x):
     '''
     # b, c, t, h, w = x.shape
     # x = x.reshape((b, t, c, h, w))
-    # xi = x[:, :, 1:, :, :]
-    # xj = x[:, :, 0:-1, :, :]
-    xi = x[:, 1:, :, :, :]
-    xj = x[:, 0:-1, :, :, :]
+    xi = x[:, :, 1:, :, :]
+    xj = x[:, :, 0:-1, :, :]
 
     return torch.abs(xi - xj)
 
@@ -397,7 +395,7 @@ def cmpMeanStdFrmLoder(train_dl):
     stds = stds / (i + 1)
     # print(means, stds)
     return means, stds
-def cmpMeanStd(cfgPth='config/dtsht_cfg.yml'):
+def cmpMeanStd(cfgPth='config/ped2_cfg.yml'):
     dt_cfg = load_config(cfgPth)
     vd = VideoDataLoader(**dt_cfg)
     train_dl = vd.train_dataloader()
@@ -603,7 +601,7 @@ if __name__ == '__main__':
 
     # --------------mean std-----------------
     cfgPth = 'config/ped2_cfg.yml'
-    # cfgPth = 'config/dtped2_cfg.yml'
+    # cfgPth = 'config/ped2_cfg.yml'
     cmpMeanStd(cfgPth)
 
 

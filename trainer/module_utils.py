@@ -14,6 +14,7 @@ def obtAScoresFrmOutputs(outputs):
     for i, out in enumerate(outputs):
         aeScore, y = out
         aeScores.extend(aeScore)
+
         y_true.extend(y)
 
     # normalize
@@ -23,6 +24,32 @@ def obtAScoresFrmOutputs(outputs):
 
     return scoreDic, y_true
 
+def obtAllScoresFrmOutputs(outputs):
+    '''
+    # obtain all scores and corresponding y
+    :param outputs: validation or test end outputs
+    :return: dict{scores:}, label:list...
+
+    '''
+    aeScores = []
+    motScores = []
+    y_true = []
+    for i, out in enumerate(outputs):
+        aeScore, motScore, y = out
+        aeScores.extend(aeScore)
+        motScores.extend(motScore)
+        y_true.extend(y)
+
+    # normalize
+    aeScores = torch.tensor(aeScores)
+    aeScores = utils.normalize(aeScores)
+
+    motScores = torch.tensor(motScores)
+    motScores = utils.normalize(motScores)
+    scoreDic = {'aeScores': aeScores,
+                'motScores': motScores}
+
+    return scoreDic, y_true
 
 def cmbScoreWght(scoreDic, weight=None):
     '''
@@ -45,8 +72,10 @@ def cmbScoreWght(scoreDic, weight=None):
         else:
             for p in itertools.combinations(weight, itms):
                 cmbScore = torch.zeros_like(list(scoreDic.values())[0])
-                for i, k, v in enumerate(scoreDic.items()):
-                    cmbScore += v * p[i]
+                allVs = list(scoreDic.values())
+                for i in range(len(allVs)):
+                    cmbScore += allVs[i]*p[i]
+
                 cmbScores[p] = cmbScore
     return cmbScores
 
@@ -110,11 +139,11 @@ def cmpCmbAUCWght(scoreDic, weight, y_true, res, epoch):
             # v = v.detach().cpu()
             # val_roc = roc_auc_score(y_true, v)
             val_roc = calAUC(v, y_true)
-            print()
-            print(f'current auc:{val_roc}'.center(100, '-'))
+            # print()
+            # print(f'current auc:{val_roc}'.center(100, '-'))
             if res['maxAuc'] < val_roc:
                 res['maxAuc'] = val_roc
-                res['coef'] = k
+                res['coef'] = str(k)
                 res['label'] = y_true
                 res['score'] = v
                 res['epoch'] = epoch

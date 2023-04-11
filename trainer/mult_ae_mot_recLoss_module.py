@@ -20,12 +20,12 @@ class MultAeMotRecLossModule(pytorch_lightning.LightningModule):
 
         layers = self.hparams.layers
         self.aeLoss = AeLoss(layers)
-        self.motLoss = TimeGrdLoss()
+        self.motLoss = TimeGrdLoss(layers)
 
         self.aeScore = AeScore(layers, batch_size=self.hparams.batch_size)
         self.motScore = TimeGrdScore(self.hparams.batch_size)
         # test results
-        self.res={'maxAuc':0}
+        self.res={'maxAuc':0, 'coef':0}
 
 
     def forward(self, x):
@@ -65,16 +65,20 @@ class MultAeMotRecLossModule(pytorch_lightning.LightningModule):
         # x_r= self(x)
         x_r, z, enc_out, dec_out = self.model(x)
 
-        aeLss = self.aeLoss(x, x_r)
+        aeLss = self.aeLoss(enc_out, dec_out)
+        motLss = self.motLoss(enc_out, dec_out)
         # print(f'------------x_r:{x_r.requires_grad},x:{x.requires_grad}--------------')
-        logDic ={'aeLoss': aeLss}
+        logDic ={'aeLss': aeLss,
+                 'motLss': motLss}
         self.log_dict(logDic, prog_bar=True)
 
-        return aeLss
+        allLss = aeLss*self.hparams.aeLsAlpha+ \
+                 motLss*self.hparams.motLsAlpha
+        return allLss
 
     def validation_step(self, batch, batch_idx):
-        aeScore, y = self.tst_val_step(batch)
-        return (aeScore, y)
+        # aeScore, y = self.tst_val_step(batch)
+        return self.tst_val_step(batch)
 
     def validation_epoch_end(self, outputs):
         self.tst_val_step_end(outputs, logStr='val_roc')
@@ -94,14 +98,16 @@ class MultAeMotRecLossModule(pytorch_lightning.LightningModule):
 
         # calculte anomaly score
         aeScore = self.aeScore(x, x_r)
+        motScore = self.motScore(x, x_r)
+
         if aeScore.requires_grad == False:
             aeScore = aeScore.requires_grad_()
 
-        return aeScore, y
+        return aeScore, motScore, y
 
     def tst_val_step_end(self, outputs, logStr='val_roc'):
         # obtain all scores and corresponding y
-        scores, y = module_utils.obtAScoresFrmOutputs(outputs)
+        scores, y = module_utils.obtAllScoresFrmOutputs(outputs)
         # self.res['epoch'] = self.current_epoch
 
         # compute auc, scores: dictory
@@ -110,4 +116,6 @@ class MultAeMotRecLossModule(pytorch_lightning.LightningModule):
                                    res=self.res,
                                    epoch=self.current_epoch)
 
+        print()
+        print(f'optimal coef:{self.res["coef"]}'.center(100,'-'))
         self.log(logStr, self.res['maxAuc'], prog_bar=True)

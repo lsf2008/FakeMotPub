@@ -12,9 +12,11 @@ tst_dataPath: 'E:/dataset/UCSD/UCSDped2/label/test.csv'
 bgPth: 'dataset/bg/ped2Bg.pt'
 
 #removing the background 48*48
-mean: [-0.1951, -0.1951, -0.1951]
-std: [0.4289, 0.4289, 0.4289]
+#mean: [-0.1951, -0.1951, -0.1951]
+#std: [0.4289, 0.4289, 0.4289]
 
+mean: [0.4503, 0.4503, 0.4503]
+std: [0.1811, 0.1811, 0.1811]
 #-bg
 #mean: [0.0284, 0.0284, 0.0284]
 #std: [0.1138, 0.1138, 0.1138]
@@ -38,7 +40,7 @@ raw_shape: [3, *num_frames, 240, 360] # original size of video frame
 train_dt_sampler: 'random'
 val_dt_sampler: 'uniform'
 stride: 16
-layers: [0,1]
+layers: [0,1,2,3]
 
 
 #=====================train=====================
@@ -63,9 +65,9 @@ objFlg: 'soft'
 
 # loss parameters
 oneLsAlpha: 1 #1-0.827, 2-0.839 #5-0.826
-aeLsAlpha: 20
+aeLsAlpha: 1
 gdLsAlpha: 1 #1
-tgLsAlpha: 10 #20 # 20-0.839, 50-0.81，10-0.830
+motLsAlpha: 10 #20 # 20-0.839, 50-0.81，10-0.830
 cntNum: 1 # clusters
 
 #score combination coefficients list

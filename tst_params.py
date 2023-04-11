@@ -7,11 +7,12 @@ import time
 import prettytable
 from dataset.video_dataloader import VideoDataLoader
 from trainer.mult_mot_recLoss_module import MultMotRecLossModule
+from trainer.mult_ae_mot_recLoss_module import MultAeMotRecLossModule
 from trainer.trainer import trainer_vd_module
 
-pl.seed_everything(999999)
-flg = 'ped2_mot'
+flg = 'ped2_mot_ae_lossCoef'
 if flg =='ped2_ae':
+    pl.seed_everything(999999)
     stat_time = time.time()
 
     tbl = prettytable.PrettyTable()
@@ -44,10 +45,11 @@ if flg =='ped2_ae':
     print(f'running time:{(end_time-stat_time)/60} m')
 
 if flg =='ped2_mot':
+    pl.seed_everything(999999)
     stat_time = time.time()
-
+    print('ped2-motion'.center(100, '-'))
     tbl = prettytable.PrettyTable()
-    tbl.field_names=['layers', 'auc']
+    tbl.field_names=['layers', 'auc', 'coef']
     layers = [[0],
               [0,1], [0,1,2], [0,1, 2, 3], [0,1,2,3,4], [0,1, 3], [0,1, 4],
               [0,2], [0,2,3], [0,2,3,4],
@@ -71,7 +73,7 @@ if flg =='ped2_mot':
         # ------------------only ae-----------------
         # mdl = MultAERecLossModule(model, **vars(args))
 
-        # --------------------only motion--------------
+        # -------------------- motion--------------
         mdl = MultMotRecLossModule(model, **vars(args))
 
         # 使用module训练模型
@@ -81,10 +83,97 @@ if flg =='ped2_mot':
                        code_length=args.code_length)
 
 
-        tbl.add_row([layer, res['maxAuc']])
+        tbl.add_row([layer, res['maxAuc'], res['coef']])
     end_time = time.time()
     print(tbl)
-    with open('layers_tst_mot.txt', 'w') as f:
+    with open('ped2_layers_ae_mot.txt', 'w') as f:
+        f.write(tbl.get_string())
+
+    print(f'running time:{(end_time-stat_time)/60} m')
+
+if flg =='ped2_mot_ae':
+    pl.seed_everything(999999)
+    print('ae+motion'.center(100, '='))
+    stat_time = time.time()
+
+    tbl = prettytable.PrettyTable()
+    tbl.field_names=['layers', 'auc', 'coef']
+    layers = [[0],
+              [0,1], [0,1,2], [0,1, 2, 3], [0,1,2,3,4], [0,1, 3], [0,1, 4],
+              [0,2], [0,2,3], [0,2,3,4],
+              [0, 3], [0,3,4],
+              [0, 4],
+              [1], [1,2], [1,3],[1,4],
+              [2],[2,3],[2,4],
+              [3],[3,4],
+              [2,3,4]
+              ]
+    # layers = [[0], [0,1,2, 3,4 ]]
+    for layer in layers:
+        args = initial_params('config/ped2_cfg.yml')
+        args.layers=layer
+
+        vd = VideoDataLoader(**vars(args))
+        # 模型
+        model = AeMultiOut(input_shape=args.input_shape,
+                           code_length=args.code_length)
+        # module
+        # ------------------only ae-----------------
+        # mdl = MultAERecLossModule(model, **vars(args))
+
+        # --------------------ae+ motion--------------
+        mdl = MultAeMotRecLossModule(model, **vars(args))
+
+        # 使用module训练模型
+        res = trainer_vd_module(args, mdl, vd)
+
+        model = AeMultiOut(input_shape=args.input_shape,
+                       code_length=args.code_length)
+
+
+        tbl.add_row([layer, res['maxAuc'], res['coef']])
+    end_time = time.time()
+    print(tbl)
+    with open('ped2_layers_ae_mot.txt', 'w') as f:
+        f.write(tbl.get_string())
+
+    print(f'running time:{(end_time-stat_time)/60} m')
+
+if flg =='ped2_mot_ae_lossCoef':
+    pl.seed_everything(999999)
+    print('ped2_mot_ae_lossCoef'.center(100, '='))
+    stat_time = time.time()
+
+    tbl = prettytable.PrettyTable()
+    tbl.field_names=['mot_coef', 'auc', 'cmb_coef', 'layers']
+    coef = [0.5, 1, 5, 10, 15, 20, 25,  30, 35, 40, 45]
+
+    for layer in coef:
+        args = initial_params('config/ped2_cfg.yml')
+        args.motLsAlpha=layer
+
+        vd = VideoDataLoader(**vars(args))
+        # 模型
+        model = AeMultiOut(input_shape=args.input_shape,
+                           code_length=args.code_length)
+        # module
+        # ------------------only ae-----------------
+        # mdl = MultAERecLossModule(model, **vars(args))
+
+        # --------------------ae+ motion--------------
+        mdl = MultAeMotRecLossModule(model, **vars(args))
+
+        # 使用module训练模型
+        res = trainer_vd_module(args, mdl, vd)
+
+        model = AeMultiOut(input_shape=args.input_shape,
+                       code_length=args.code_length)
+
+
+        tbl.add_row([layer, res['maxAuc'], res['coef'], args.layers])
+    end_time = time.time()
+    print(tbl)
+    with open('ped2_mot_lossCoef_layer-012.txt', 'w') as f:
         f.write(tbl.get_string())
 
     print(f'running time:{(end_time-stat_time)/60} m')

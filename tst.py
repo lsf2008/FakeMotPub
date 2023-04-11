@@ -5,10 +5,11 @@ from trainer.trainer import train_trainer,trainer_vd_module
 from dataset.video_dataloader import VideoDataLoader
 from trainer.mult_ae_recLoss_module import MultAERecLossModule
 from trainer.mult_mot_recLoss_module import MultMotRecLossModule
+from trainer.mult_ae_mot_recLoss_module import MultAeMotRecLossModule
 from trainer.mult_recLoss_module_finch import MultRecLossModuleFinch
 import pytorch_lightning as pl
 import time
-pl.seed_everything(555555)
+pl.seed_everything(999999)
 flg = 'ped2'
 
 if flg =='ped2':
@@ -25,7 +26,7 @@ if flg =='ped2':
     # mdl = MultAERecLossModule(model, **vars(args))
 
     # --------------------only motion--------------
-    mdl = MultMotRecLossModule(model, **vars(args))
+    mdl = MultAeMotRecLossModule(model, **vars(args))
 
     # 使用module训练模型
     res = trainer_vd_module(args, mdl, vd)
