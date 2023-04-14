@@ -27,7 +27,7 @@ class Encoder(BaseModule):
 
         self.input_shape = input_shape
         self.code_length = code_length
-
+        self.wght = VarWght()
         c, t, h, w = input_shape
 
         activation_fn = nn.LeakyReLU()
@@ -68,8 +68,9 @@ class Encoder(BaseModule):
         end_out.append(h)
         for conv in self.conv:
             h = conv(h)
+            h = self.wght(h)
             end_out.append(h)
-
+        end_out.pop(-1)
         return h, end_out
 
 class Encoder1(BaseModule):
@@ -243,19 +244,19 @@ class Decoder(BaseModule):
         self.code_length = code_length
         self.deepest_shape = deepest_shape
         self.output_shape = output_shape
-
+        self.wght = VarWght()
         dc, dt, dh, dw = deepest_shape
 
         activation_fn = nn.LeakyReLU()
 
         # FC network
-        self.tdl = nn.Sequential(
-            TemporallySharedFullyConnection(in_features=code_length, out_features=512),
-            activation_fn,
-            TemporallySharedFullyConnection(in_features=512, out_features=(dc * dh * dw)),
-            # activation_fn
-            nn.Tanh()
-        )
+        # self.tdl = nn.Sequential(
+        #     TemporallySharedFullyConnection(in_features=code_length, out_features=512),
+        #     activation_fn,
+        #     TemporallySharedFullyConnection(in_features=512, out_features=(dc * dh * dw)),
+        #     # activation_fn
+        #     nn.Tanh()
+        # )
 
         # Convolutional network
         self.conv = nn.Sequential(
@@ -293,9 +294,9 @@ class Decoder(BaseModule):
 
         for con in self.conv:
             h = con(h)
+            h = self.wght(h)
             dec_out.append(h)
         # h = self.conv(h)
-
         o = h
 
         return o, dec_out
@@ -367,6 +368,7 @@ class AeMultiOut(BaseModule):
 
         # Produce representations
         z, enc_out = self.encoder(h)
+
         z = self.vw(z)
         # Reconstruct x
         x_r, dec_out = self.decoder(z)
@@ -433,14 +435,14 @@ class AeMultiOut1(BaseModule):
 if __name__=='__main__':
     import torch
 
-    input_shape = (3, 8, 32, 32)
+    input_shape = (3, 8, 48, 48)
     code_length = 64
-    x = torch.randn((400, 3, 8, 32, 32))
+    x = torch.randn((400, 3, 8, 48, 48))
 
     # aveShAe = AvenueShAE(input_shape, code_length)
     # x_r, z = aveShAe(x)
     # ------------------encoder---------------------
-    end = AeMultiOut(input_shape, code_length, 2)
+    end = AeMultiOut(input_shape, code_length)
     x_r, z, enc_out, dec_out = end(x)
     dec_out=reversed(dec_out)
     for i in enc_out:
