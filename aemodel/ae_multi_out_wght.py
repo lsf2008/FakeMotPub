@@ -1,3 +1,6 @@
+'''
+只使用channel上的权重，嵌入空间上时间特征维度为1
+'''
 import torch
 import torch.nn as nn
 
@@ -40,17 +43,17 @@ class Encoder(BaseModule):
         )
 
         self.deepest_shape = (64, t // 8, h // 8, w // 8)
-
-        # FC network
-        dc, dt, dh, dw = self.deepest_shape
-        self.tdl = nn.Sequential(
-            TemporallySharedFullyConnection(in_features=(dc * dh * dw), out_features=512),
-            activation_fn,
-
-            TemporallySharedFullyConnection(in_features=512, out_features=code_length),
-            # # nn.Sigmoid()
-            activation_fn
-        )
+        #
+        # # FC network
+        # dc, dt, dh, dw = self.deepest_shape
+        # self.tdl = nn.Sequential(
+        #     TemporallySharedFullyConnection(in_features=(dc * dh * dw), out_features=512),
+        #     activation_fn,
+        #
+        #     TemporallySharedFullyConnection(in_features=512, out_features=code_length),
+        #     # # nn.Sigmoid()
+        #     activation_fn
+        # )
 
     def forward(self, x):
         # types: (torch.Tensor) -> torch.Tensor
@@ -69,18 +72,18 @@ class Encoder(BaseModule):
         # h = self.conv(h)
 
         # Reshape for fully connected sub-network (flatten)
-        c, t, height, width = self.deepest_shape
+        # c, t, height, width = self.deepest_shape
 
         # h = h.permute(0, 2, 3, 4, 1).contiguous()
         # h = h.view(-1, height, width, c)
         # h = GRN(c)(h)
-        h = torch.transpose(h, 1, 2).contiguous()
-        h = h.view(-1, t, (c * height * width))
+        # h = torch.transpose(h, 1, 2).contiguous()
+        # h = h.view(-1, t, (c * height * width))
 
-        o = self.tdl(h)
+        # o = self.tdl(h)
 
         # end_out.append(o)
-        return o, end_out
+        return h, end_out
 
 class Encoder1(BaseModule):
     """
@@ -180,14 +183,14 @@ class Decoder1(BaseModule):
         activation_fn = nn.LeakyReLU()
 
         # FC network
-        self.tdl = nn.Sequential(
-            TemporallySharedFullyConnection(in_features=code_length, out_features=512),
-            activation_fn,
-
-            TemporallySharedFullyConnection(in_features=512, out_features=(dc * dh * dw)),
-            # activation_fn
-            nn.Tanh()
-        )
+        # self.tdl = nn.Sequential(
+        #     TemporallySharedFullyConnection(in_features=code_length, out_features=512),
+        #     activation_fn,
+        #
+        #     TemporallySharedFullyConnection(in_features=512, out_features=(dc * dh * dw)),
+        #     # activation_fn
+        #     nn.Tanh()
+        # )
 
         # Convolutional network
         self.conv = nn.Sequential(
@@ -294,12 +297,12 @@ class Decoder(BaseModule):
         """
         h = x
         dec_out=[]
-        h = self.tdl(h)
+        # h = self.tdl(h)
 
         # Reshape to encoder's deepest convolutional shape
-        h = torch.transpose(h, 1, 2).contiguous()
-        h = h.view(len(h), *self.deepest_shape)
-        dec_out.append(h)
+        # h = torch.transpose(h, 1, 2).contiguous()
+        # h = h.view(len(h), *self.deepest_shape)
+        # dec_out.append(h)
 
         for con in self.conv:
             h = con(h)
@@ -328,7 +331,7 @@ class AeMultiOut(BaseModule):
 
         self.input_shape = input_shape
         self.code_length = code_length
-        self.vw = VarWght()
+
         # self.norm = torch.nn.LayerNorm(code_length)
         # self.norm = torch.nn.BatchNorm1d(code_length)
         # if bacth_sz is not None:
@@ -348,8 +351,9 @@ class AeMultiOut(BaseModule):
             deepest_shape=self.encoder.deepest_shape,
             output_shape=input_shape
         )
-
+        self.vw = VarWght().to(next(self.decoder.parameters()).device)
         self.init_params()
+
     def init_params(self):
         self._init_params(self.encoder)
         self._init_params(self.decoder)
@@ -376,7 +380,7 @@ class AeMultiOut(BaseModule):
 
         # Produce representations
         z, enc_out = self.encoder(h)
-
+        z = self.vw(z)
         # Reconstruct x
         x_r, dec_out = self.decoder(z)
         x_r = x_r.view(-1, *self.input_shape)

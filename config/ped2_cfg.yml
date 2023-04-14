@@ -40,7 +40,7 @@ raw_shape: [3, *num_frames, 240, 360] # original size of video frame
 train_dt_sampler: 'random'
 val_dt_sampler: 'uniform'
 stride: 16
-layers: [0,1,2,3]
+layers: [0,3,4]
 
 
 #=====================train=====================
@@ -51,7 +51,7 @@ weight_decay: 0.0001
 aeWarmEpochs: 1
 
 # training scheduler
-lr_scheduler: 'step'
+lr_scheduler: 'cosine'
 lr_decay_steps: 80
 lr_decay_rate: 0.5
 lr_decay_min_lr: 0.00001
@@ -67,7 +67,7 @@ objFlg: 'soft'
 oneLsAlpha: 1 #1-0.827, 2-0.839 #5-0.826
 aeLsAlpha: 1
 gdLsAlpha: 1 #1
-motLsAlpha: 10 #20 # 20-0.839, 50-0.81，10-0.830
+motLsAlpha: 1 #20 # 20-0.839, 50-0.81，10-0.830
 cntNum: 1 # clusters
 
 #score combination coefficients list

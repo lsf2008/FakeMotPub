@@ -1,4 +1,5 @@
-from aemodel.ae_multi_out import AeMultiOut
+# from aemodel.ae_multi_out import AeMultiOut
+from aemodel.ae_multi_out_wght import AeMultiOut
 from config.param_seting import initial_params
 from trainer.trainer import train_trainer
 from aemodel.autoencoder import convAE
@@ -86,7 +87,7 @@ if flg =='ped2_mot':
         tbl.add_row([layer, res['maxAuc'], res['coef']])
     end_time = time.time()
     print(tbl)
-    with open('ped2_layers_ae_mot.txt', 'w') as f:
+    with open('data/ped2_layers_ae_mot-layer012.txt', 'w') as f:
         f.write(tbl.get_string())
 
     print(f'running time:{(end_time-stat_time)/60} m')
@@ -134,7 +135,7 @@ if flg =='ped2_mot_ae':
         tbl.add_row([layer, res['maxAuc'], res['coef']])
     end_time = time.time()
     print(tbl)
-    with open('ped2_layers_ae_mot.txt', 'w') as f:
+    with open('data/ped2_layers_ae_mot-layer012.txt', 'w') as f:
         f.write(tbl.get_string())
 
     print(f'running time:{(end_time-stat_time)/60} m')
@@ -145,8 +146,8 @@ if flg =='ped2_mot_ae_lossCoef':
     stat_time = time.time()
 
     tbl = prettytable.PrettyTable()
-    tbl.field_names=['mot_coef', 'auc', 'cmb_coef', 'layers']
-    coef = [0.5, 1, 5, 10, 15, 20, 25,  30, 35, 40, 45]
+    tbl.field_names=['mot_coef', 'auc', 'cmb_coef', 'layers', 'epoch']
+    coef = [0.1, 0.5, 1, 5, 10, 15, 20, 25,  30, 35, 40, 45]
 
     for layer in coef:
         args = initial_params('config/ped2_cfg.yml')
@@ -170,10 +171,12 @@ if flg =='ped2_mot_ae_lossCoef':
                        code_length=args.code_length)
 
 
-        tbl.add_row([layer, res['maxAuc'], res['coef'], args.layers])
+        tbl.add_row([layer, res['maxAuc'], res['coef'], args.layers, res['epoch']])
     end_time = time.time()
     print(tbl)
-    with open('ped2_mot_lossCoef_layer-012.txt', 'w') as f:
+    sv_name = 'data/ped2_vw_ae_mot_0td_layer'+str(args.layers)+'_bsz'+str(args.input_shape[3])+'.txt'
+    with open(sv_name, 'w') as f:
         f.write(tbl.get_string())
 
     print(f'running time:{(end_time-stat_time)/60} m')
+

@@ -1,4 +1,5 @@
-from aemodel.ae_multi_out import AeMultiOut
+# from aemodel.ae_multi_out import AeMultiOut
+from aemodel.ae_multi_out_wght import AeMultiOut
 from config.param_seting import initial_params
 from trainer.trainer import train_trainer,trainer_vd_module
 # from aemodel.autoencoder import convAE
