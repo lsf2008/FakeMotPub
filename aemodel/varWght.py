@@ -1,20 +1,25 @@
 import torch
 from aemodel.base import BaseModule
 class VarWght(BaseModule):
-    def __init__(self):
+    def __init__(self, is_app=False):
         super(VarWght, self).__init__()
+        self.is_app = is_app
     def forward(self, x, alph1=1, alph2=1):
         b, c, t, h, w = x.shape
-        if t>1:
-            # feature weight
-            feaWght = self.cmpFeaWhgt(x)
-            x1 = x * feaWght
-            tmpWght = self.cmpTempWght(x)
-            x2 = x * tmpWght
-            x = alph1*x1 + alph2*x2
-        else:
+        if self.is_app:
             feaWght = self.cmpFeaWhgt(x)
             x = x * feaWght
+        else:
+            if t>1:
+                # feature weight
+                feaWght = self.cmpFeaWhgt(x)
+                x1 = x * feaWght
+                tmpWght = self.cmpTempWght(x)
+                x2 = x * tmpWght
+                x = alph1*x1 + alph2*x2
+            else:
+                feaWght = self.cmpFeaWhgt(x)
+                x = x * feaWght
         return x
     # def forward(self, x):
     #     '''compute the variance weight for the feature maps
@@ -60,11 +65,12 @@ class VarWght(BaseModule):
 
     def cmpWght(self, x):
         # b, c, t, h, w / b, t, c, h, w
-        dim_var = torch.var(x, dim=2)  # b, c, h, w
+        dim_var = torch.var(x, dim=2)+10e-7  # b, c, h, w
+        # dim_var = torch.nn.functional.normalize(dim_var, p=2, dim=[-2,-1])
         softMax = torch.nn.Softmax2d()
         soft_wgh = softMax(dim_var)  # b, c, h, w
         # dim_var = soft_wgh.unsqueeze(1)
-        return dim_var
+        return soft_wgh
 
     def cmpFeaWhgt(self, x):
         # b, c, t, h, w

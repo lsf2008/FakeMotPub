@@ -18,7 +18,7 @@ class MultAeMotRecLossModule(pytorch_lightning.LightningModule):
         #     self.model=self.model.cuda()
         # loss function
 
-        layers = self.hparams.layers
+        layers = self.hparams.rec_layers
         self.aeLoss = AeLoss(layers)
         self.motLoss = TimeGrdLoss(layers)
 

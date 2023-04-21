@@ -1,5 +1,5 @@
 # from aemodel.ae_multi_out import AeMultiOut
-from aemodel.ae_multi_out_wght import AeMultiOut
+from aemodel.ae_multi_out_wghts import AeMultiOut
 from config.param_seting import initial_params
 from trainer.trainer import train_trainer,trainer_vd_module
 # from aemodel.autoencoder import convAE
@@ -9,10 +9,12 @@ from trainer.mult_mot_recLoss_module import MultMotRecLossModule
 from trainer.mult_ae_mot_recLoss_module import MultAeMotRecLossModule
 from trainer.mult_recLoss_module_finch import MultRecLossModuleFinch
 import pytorch_lightning as pl
+import prettytable as pt
 import time
 pl.seed_everything(999999)
-flg = 'ped2'
-
+flg = 'ave'
+tbl = pt.PrettyTable()
+tbl.field_names=[ 'auc', 'cmb_coef', 'layers', 'epoch']
 if flg =='ped2':
     # ===================ae==================
     stat_time = time.time()
@@ -21,7 +23,8 @@ if flg =='ped2':
     vd = VideoDataLoader(**vars(args))
     # 模型
     model = AeMultiOut(input_shape=args.input_shape,
-                       code_length=args.code_length)
+                       code_length=args.code_length,
+                       layers=args.wght_layers)
     # module
     # ------------------only ae-----------------
     # mdl = MultAERecLossModule(model, **vars(args))
@@ -32,6 +35,7 @@ if flg =='ped2':
     # 使用module训练模型
     res = trainer_vd_module(args, mdl, vd)
     end_time = time.time()
+    tbl.add_row([res['maxAuc'], res['coef'], args.rec_layers, res['epoch']])
     print(f'running time:{(end_time - stat_time) / 60} m')
 
     # ===================AE+ FINCH==================
@@ -52,7 +56,23 @@ if flg =='ped2':
     # print(f'running time:{(end_time - stat_time) / 60} m')
 if flg =='ave':
     args = initial_params('config/ave_cfg.yml')
-
+    stat_time = time.time()
+    # 数据集
+    vd = VideoDataLoader(**vars(args))
+    # 模型
     model = AeMultiOut(input_shape=args.input_shape,
-                       code_length=args.code_length)
-    res = train_trainer(args, model)
+                       code_length=args.code_length,
+                       layers=args.wght_layers)
+    # module
+    # ------------------only ae-----------------
+    # mdl = MultAERecLossModule(model, **vars(args))
+
+    # --------------------only motion--------------
+    mdl = MultAeMotRecLossModule(model, **vars(args))
+
+    # 使用module训练模型
+    res = trainer_vd_module(args, mdl, vd)
+    end_time = time.time()
+    tbl.add_row([res['maxAuc'], res['coef'], args.rec_layers, res['epoch']])
+    print(tbl)
+    print(f'running time:{(end_time - stat_time) / 60} m')

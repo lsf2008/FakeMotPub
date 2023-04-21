@@ -31,7 +31,7 @@ if flg =='ped2_ae':
     # layers = [[0], [0,1,2, 3,4 ]]
     for layer in layers:
         args = initial_params('config/ped2_cfg.yml')
-        args.layers=layer
+        args.rec_layers=layer
 
         model = AeMultiOut(input_shape=args.input_shape,
                        code_length=args.code_length)
@@ -64,12 +64,13 @@ if flg =='ped2_mot':
     # layers = [[0], [0,1,2, 3,4 ]]
     for layer in layers:
         args = initial_params('config/ped2_cfg.yml')
-        args.layers=layer
+        args.rec_layers=layer
 
         vd = VideoDataLoader(**vars(args))
         # 模型
         model = AeMultiOut(input_shape=args.input_shape,
-                           code_length=args.code_length)
+                           code_length=args.code_length,
+                           layers=args.wght_layers)
         # module
         # ------------------only ae-----------------
         # mdl = MultAERecLossModule(model, **vars(args))
@@ -87,7 +88,7 @@ if flg =='ped2_mot':
         tbl.add_row([layer, res['maxAuc'], res['coef']])
     end_time = time.time()
     print(tbl)
-    with open('data/ped2_layers_ae_mot-layer012.txt', 'w') as f:
+    with open('data/ped2/app+time/ped2_layers_ae_mot-layer012.txt', 'w') as f:
         f.write(tbl.get_string())
 
     print(f'running time:{(end_time-stat_time)/60} m')
@@ -112,12 +113,13 @@ if flg =='ped2_mot_ae':
     # layers = [[0], [0,1,2, 3,4 ]]
     for layer in layers:
         args = initial_params('config/ped2_cfg.yml')
-        args.layers=layer
+        args.rec_layers=layer
 
         vd = VideoDataLoader(**vars(args))
         # 模型
         model = AeMultiOut(input_shape=args.input_shape,
-                           code_length=args.code_length)
+                           code_length=args.code_length,
+                           layers=args.wght_layers)
         # module
         # ------------------only ae-----------------
         # mdl = MultAERecLossModule(model, **vars(args))
@@ -135,7 +137,7 @@ if flg =='ped2_mot_ae':
         tbl.add_row([layer, res['maxAuc'], res['coef']])
     end_time = time.time()
     print(tbl)
-    with open('data/ped2_layers_ae_mot-layer012.txt', 'w') as f:
+    with open('data/ped2/app+time/ped2_layers_ae_mot-layer012.txt', 'w') as f:
         f.write(tbl.get_string())
 
     print(f'running time:{(end_time-stat_time)/60} m')
@@ -156,7 +158,8 @@ if flg =='ped2_mot_ae_lossCoef':
         vd = VideoDataLoader(**vars(args))
         # 模型
         model = AeMultiOut(input_shape=args.input_shape,
-                           code_length=args.code_length)
+                           code_length=args.code_length,
+                           layers=args.wght_layers)
         # module
         # ------------------only ae-----------------
         # mdl = MultAERecLossModule(model, **vars(args))
@@ -171,10 +174,10 @@ if flg =='ped2_mot_ae_lossCoef':
                        code_length=args.code_length)
 
 
-        tbl.add_row([layer, res['maxAuc'], res['coef'], args.layers, res['epoch']])
+        tbl.add_row([layer, res['maxAuc'], res['coef'], args.rec_layers, res['epoch']])
     end_time = time.time()
     print(tbl)
-    sv_name = 'data/ped2_vw_ae_mot_0td_layer'+str(args.layers)+'_bsz'+str(args.input_shape[3])+'.txt'
+    sv_name = 'data/ped2_34appTimeWightNormvar_AeMo_0td_layer'+str(args.rec_layers)+'_bsz'+str(args.input_shape[3])+'.txt'
     with open(sv_name, 'w') as f:
         f.write(tbl.get_string())
 

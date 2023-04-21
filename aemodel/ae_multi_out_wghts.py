@@ -15,7 +15,7 @@ class Encoder(BaseModule):
     """
     ShanghaiTech model encoder.
     """
-    def __init__(self, input_shape, code_length):
+    def __init__(self, input_shape, code_length, layers = [3, 4]):
         # type: (Tuple[int, int, int, int], int) -> None
         """
         Class constructor:
@@ -27,6 +27,7 @@ class Encoder(BaseModule):
 
         self.input_shape = input_shape
         self.code_length = code_length
+        self.layers = layers
         self.wght = VarWght()
         c, t, h, w = input_shape
 
@@ -66,9 +67,11 @@ class Encoder(BaseModule):
         end_out = []
         h = x
         end_out.append(h)
-        for conv in self.conv:
+        # layers = [3, 4]
+        for i, conv in enumerate(self.conv):
             h = conv(h)
-            h = self.wght(h)
+            if i in self.layers:
+                h = self.wght(h)
             end_out.append(h)
         end_out.pop(-1)
         return h, end_out
@@ -230,7 +233,7 @@ class Decoder(BaseModule):
     """
     ShanghaiTech model decoder.
     """
-    def __init__(self, code_length, deepest_shape, output_shape):
+    def __init__(self, code_length, deepest_shape, output_shape, layers = [3, 4]):
         # type: (int, Tuple[int, int, int, int], Tuple[int, int, int, int]) -> None
         """
         Class constructor.
@@ -244,6 +247,7 @@ class Decoder(BaseModule):
         self.code_length = code_length
         self.deepest_shape = deepest_shape
         self.output_shape = output_shape
+        self.layers = layers
         self.wght = VarWght()
         dc, dt, dh, dw = deepest_shape
 
@@ -291,10 +295,11 @@ class Decoder(BaseModule):
         # h = torch.transpose(h, 1, 2).contiguous()
         # h = h.view(len(h), *self.deepest_shape)
         # dec_out.append(h)
-
-        for con in self.conv:
+        # layers = [3, 4]
+        for i, con in enumerate(self.conv):
             h = con(h)
-            h = self.wght(h)
+            if i in self.layers:
+                h = self.wght(h)
             dec_out.append(h)
         # h = self.conv(h)
         o = h
@@ -306,7 +311,7 @@ class AeMultiOut(BaseModule):
     LSA model for ShanghaiTech video anomaly detection.
     output at each layer and use them for loss function
     """
-    def __init__(self, input_shape, code_length):
+    def __init__(self, input_shape, code_length, layers = [2,3,4]):
         # type: (Tuple[int, int, int, int], int, int) -> None
         """
         Class constructor.
@@ -330,14 +335,16 @@ class AeMultiOut(BaseModule):
         # Build encoder
         self.encoder = Encoder(
             input_shape=input_shape,
-            code_length=code_length
+            code_length=code_length,
+            layers = layers
         )
 
         # Build decoder
         self.decoder = Decoder(
             code_length=code_length,
             deepest_shape=self.encoder.deepest_shape,
-            output_shape=input_shape
+            output_shape=input_shape,
+            layers = layers
         )
         self.vw = VarWght().to(next(self.decoder.parameters()).device)
         self.init_params()
