@@ -34,7 +34,7 @@ std: [0.1468, 0.1525, 0.1552]
 frames_per_second: 30
 # side_size: 200
 #if shortSide_size: 160, and crop_size: [3, 8, 160, 280], do the detection on whole image
-crop_size: [3, 8, 40, 40] # patch size h,w is x*4
+crop_size: [3, 8, 48, 48] # patch size h,w is x*4
 
 # device_number: 1
 batch_size: 2
@@ -50,5 +50,34 @@ raw_shape: [3, *num_frames, 480, 856] # original size of video frame
 train_dt_sampler: 'random'
 val_dt_sampler: 'uniform'
 stride: 16
+rec_layers: [0,3,4]
+wght_layers: [0,3, 4]
 
+#=====================train=====================
+# training parameters
+lr: 0.0001
+weight_decay: 0.0001
+# optimizer: Adam
+aeWarmEpochs: 1
 
+# training scheduler
+lr_scheduler: 'step'
+lr_decay_steps: 80
+lr_decay_rate: 0.5
+lr_decay_min_lr: 0.00001
+updtR_epoches: 15
+
+# model parameters
+# input_shape: [3, 8, 32, 32]
+code_length: 64
+nu: 0.01
+objFlg: 'soft'
+
+# loss parameters
+aeLsAlpha: 1
+gdLsAlpha: 1 #1
+motLsAlpha: 25 #20 # 20-0.839, 50-0.81，10-0.830
+cntNum: 1 # clusters
+
+#score combination coefficients list
+cmbScoreWght: [-2, -1, -0.5, -0.1, 0, 0.1, 0.5, 1, 2, 5]
