@@ -7,7 +7,7 @@ from trainer.trainer import train_trainer,trainer_vd_module
 # from aemodel.autoencoder import convAE
 from dataset.video_dataloader import VideoDataLoader
 from trainer.mult_ae_recLoss_module import MultAERecLossModule
-from trainer.mult_mot_recLoss_module import MultMotRecLossModule
+from trainer.mult_mot_class_module import MultMotRecLossModule
 from trainer.mult_ae_mot_recLoss_module import MultAeMotRecLossModule
 from trainer.mult_recLoss_module_finch import MultRecLossModuleFinch
 import pytorch_lightning as pl

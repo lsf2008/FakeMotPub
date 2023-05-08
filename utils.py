@@ -600,7 +600,7 @@ if __name__ == '__main__':
 
 
     # --------------mean std-----------------
-    cfgPth = 'config/ped2_cfg.yml'
+    cfgPth = 'config/ave_cfg.yml'
     # cfgPth = 'config/ped2_cfg.yml'
     cmpMeanStd(cfgPth)
 

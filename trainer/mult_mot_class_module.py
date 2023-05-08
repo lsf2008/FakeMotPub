@@ -61,12 +61,20 @@ class MultMotRecLossModule(pytorch_lightning.LightningModule):
         x = batch['video']
         # x = module_utils.filterCrops(x)
 
+        # -----------normal data reconstruction----------
         x = x.reshape((-1, *x.shape[2:]))
         # x_r= self(x)
         x_r, z, enc_out, dec_out = self.model(x)
 
-        # aeLss = self.aeLoss(x, x_r)
-        aeLss = self.motLoss(enc_out, dec_out)
+        # -----------anomaly data reconstruction---------
+        # shffule the data along the time axis
+        x_shuffle = x[:, torch.randperm(x.size()[1]), :, :]
+        x_r_shuffle, z_shuffle, enc_out_shuffle, dec_out_shuffle = self.model(x)
+
+        # --------------compute the loss ---------------
+        norm_mot_rec_ls = self.motLoss(enc_out, dec_out)
+        anormal_mot_rec_ls = self.motLoss(x_shuffle, x_r_shuffle)
+
         # print(f'------------x_r:{x_r.requires_grad},x:{x.requires_grad}--------------')
         logDic ={'aeLoss': aeLss}
         self.log_dict(logDic, prog_bar=True)
