@@ -29,9 +29,8 @@ class MultAeMotRecLossModule(pytorch_lightning.LightningModule):
 
 
     def forward(self, x):
-
         x_r, z, enc_out, dec_out = self.model(x)
-        x_r=self.model(x)
+        # x_r=self.model(x)
         z = z.reshape(z.shape[0], -1)
         return x_r
     def configure_optimizers(self):

@@ -8,10 +8,10 @@ from sklearn.metrics import roc_auc_score
 import torch.optim.lr_scheduler as lrs
 import itertools
 from trainer import module_utils
-
-class MultMotRecLossModule(pytorch_lightning.LightningModule):
+# from aemodel.ae_mlp import AeMlp
+class MotRecLossModule(pytorch_lightning.LightningModule):
     def __init__(self, inputModel, **kwargs):
-        super(MultMotRecLossModule, self).__init__()
+        super(MotRecLossModule, self).__init__()
         self.save_hyperparameters(ignore='inputModel')
         self.model = inputModel
         # if not next(self.model.parameters()).is_cuda:
@@ -31,7 +31,7 @@ class MultMotRecLossModule(pytorch_lightning.LightningModule):
     def forward(self, x):
 
         x_r, z, enc_out, dec_out = self.model(x)
-        x_r=self.model(x)
+        x_r = self.model(x)
         z = z.reshape(z.shape[0], -1)
         return x_r
     def configure_optimizers(self):
@@ -66,16 +66,15 @@ class MultMotRecLossModule(pytorch_lightning.LightningModule):
         # x_r, z, enc_out, dec_out = self.model(x)
 
         # -----------anomaly data reconstruction---------
-        # shffule the data along the time axis
+        # shuffle the data along the time axis
         x_shuffle = x[:, torch.randperm(x.size()[1]), :, :]
         x_all = torch.cat((x, x_shuffle), dim=0)
-        b, c, t, h, w = x.shape
-        x_r, z, enc_out, dec_out = self.model(x_all)
-        # x_r_shuffle, z_shuffle, enc_out_shuffle, dec_out_shuffle = self.model(x)
+        # b, c, t, h, w = x.shape
+        x_mot_soft, x_mot_ae = self.model(x_all)
 
         # --------------compute the loss ---------------
         # normal reconstruction loss
-        norm_mot_rec_ls = self.motLoss(x_r, x)
+        norm_mot_rec_ls = self.motLoss(x_mot_ae, x)
 
         # anomaly reconstruction loss
         anormal_mot_rec_ls = self.motLoss(x_shuffle, x_r_shuffle)
