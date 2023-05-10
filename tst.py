@@ -6,8 +6,7 @@ from config.param_seting import initial_params
 from trainer.trainer import train_trainer,trainer_vd_module
 # from aemodel.autoencoder import convAE
 from dataset.video_dataloader import VideoDataLoader
-from trainer.mult_ae_recLoss_module import MultAERecLossModule
-from trainer.mult_mot_class_module import MultMotRecLossModule
+from aemodel.ae_mlp import AeMlp
 from trainer.mult_ae_mot_recLoss_module import MultAeMotRecLossModule
 from trainer.mult_recLoss_module_finch import MultRecLossModuleFinch
 import pytorch_lightning as pl
@@ -15,7 +14,7 @@ import prettytable as pt
 import time
 import utils as utils
 pl.seed_everything(999999)
-flg = 'shg'
+flg = 'ped2'
 tbl = pt.PrettyTable()
 tbl.field_names=[ 'auc', 'cmb_coef', 'layers', 'epoch']
 if flg =='ped2':
@@ -25,9 +24,11 @@ if flg =='ped2':
     # 数据集
     vd = VideoDataLoader(**vars(args))
     # 模型
-    model = AeMultiOut(input_shape=args.input_shape,
-                       code_length=args.code_length,
-                       layers=args.wght_layers)
+    # model = AeMultiOut(input_shape=args.input_shape,
+    #                    code_length=args.code_length,
+    #                    layers=args.wght_layers)
+    model = AeMlp(input_shape= args.input_shape,
+                  code_length= args.code_length)
     # module
     # ------------------only ae-----------------
     # mdl = MultAERecLossModule(model, **vars(args))

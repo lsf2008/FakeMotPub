@@ -63,17 +63,24 @@ class MultMotRecLossModule(pytorch_lightning.LightningModule):
 
         # -----------normal data reconstruction----------
         x = x.reshape((-1, *x.shape[2:]))
-        # x_r= self(x)
-        x_r, z, enc_out, dec_out = self.model(x)
+        # x_r, z, enc_out, dec_out = self.model(x)
 
         # -----------anomaly data reconstruction---------
         # shffule the data along the time axis
         x_shuffle = x[:, torch.randperm(x.size()[1]), :, :]
-        x_r_shuffle, z_shuffle, enc_out_shuffle, dec_out_shuffle = self.model(x)
+        x_all = torch.cat((x, x_shuffle), dim=0)
+        b, c, t, h, w = x.shape
+        x_r, z, enc_out, dec_out = self.model(x_all)
+        # x_r_shuffle, z_shuffle, enc_out_shuffle, dec_out_shuffle = self.model(x)
 
         # --------------compute the loss ---------------
-        norm_mot_rec_ls = self.motLoss(enc_out, dec_out)
+        # normal reconstruction loss
+        norm_mot_rec_ls = self.motLoss(x_r, x)
+
+        # anomaly reconstruction loss
         anormal_mot_rec_ls = self.motLoss(x_shuffle, x_r_shuffle)
+
+        # nomal vs anomaly loss
 
         # print(f'------------x_r:{x_r.requires_grad},x:{x.requires_grad}--------------')
         logDic ={'aeLoss': aeLss}

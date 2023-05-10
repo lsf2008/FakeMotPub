@@ -41,6 +41,16 @@ class AeBaseLoss(BaseModule):
             ls = utils.cmpAeDiff(x, x_r)
         return ls
 
+class CrossLoss(AeBaseLoss):
+    def __init__(self):
+        super(CrossLoss, self).__init__()
+
+    def forward(self, x_n, x_a):
+        # x_n is normal data, x_a is anomaly data, (patches_per_batch, c, t, h, w)
+        # 1. compute gradient of both
+        grd_n = utils.cmpTimGrd(x_n)
+        grd_a = utils.cmpTimGrd(x_a)
+
 class AeLoss(AeBaseLoss):
     def __init__(self, stdInd):
         super(AeLoss, self).__init__(stdInd)
