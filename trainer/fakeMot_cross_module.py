@@ -2,38 +2,38 @@ import pytorch_lightning
 import torch
 
 import utils
-from aemodel.loss import AeLoss, TimeGrdLoss
+from aemodel.loss import AeLoss, TimeGrdLoss, CrossEntropyLoss
 from aemodel.abnEval import AeScore, TimeGrdScore
 from sklearn.metrics import roc_auc_score
 import torch.optim.lr_scheduler as lrs
-import itertools
+
 from trainer import module_utils
 # from aemodel.ae_mlp import AeMlp
-class MotRecLossModule(pytorch_lightning.LightningModule):
+class FakeMotCrossModule(pytorch_lightning.LightningModule):
     def __init__(self, inputModel, **kwargs):
-        super(MotRecLossModule, self).__init__()
+        super(FakeMotCrossModule, self).__init__()
         self.save_hyperparameters(ignore='inputModel')
         self.model = inputModel
         # if not next(self.model.parameters()).is_cuda:
         #     self.model=self.model.cuda()
         # loss function
 
-        layers = self.hparams.layers
+        layers = self.hparams.rec_layers
         # self.aeLoss = AeLoss(layers)
         self.motLoss = TimeGrdLoss(layers)
-
+        self.crsLoss = CrossEntropyLoss()
         self.aeScore = AeScore(layers, batch_size=self.hparams.batch_size)
         self.motScore = TimeGrdScore(self.hparams.batch_size)
         # test results
-        self.res={'maxAuc':0}
+        self.res={'maxAuc':0, 'coef':0}
 
 
     def forward(self, x):
 
-        x_r, z, enc_out, dec_out = self.model(x)
-        x_r = self.model(x)
-        z = z.reshape(z.shape[0], -1)
-        return x_r
+        x_mot_soft, x_mot_rec = self.model(x)
+        # x_r = self.model(x)
+        # z = z.reshape(z.shape[0], -1)
+        return x_mot_soft, x_mot_rec
     def configure_optimizers(self):
         if hasattr(self.hparams, 'weight_decay'):
             weight_decay = self.hparams.weight_decay
@@ -67,25 +67,35 @@ class MotRecLossModule(pytorch_lightning.LightningModule):
 
         # -----------anomaly data reconstruction---------
         # shuffle the data along the time axis
-        x_shuffle = x[:, torch.randperm(x.size()[1]), :, :]
+        # x_shuffle = x[:, :, torch.randperm(x.size()[2]), :, :]
+        x_shuffle = x[:, :, utils.shuffle_index(x.size()[2]), :, :]
         x_all = torch.cat((x, x_shuffle), dim=0)
+
         # b, c, t, h, w = x.shape
         x_mot_soft, x_mot_ae = self.model(x_all)
 
         # --------------compute the loss ---------------
         # normal reconstruction loss
-        norm_mot_rec_ls = self.motLoss(x_mot_ae, x)
+        x_norm_mot, x_anorm_mot = torch.split(x_mot_ae, x.shape[0], dim=0)
+        mot_rec_ls = self.motLoss(x, x_norm_mot)
+        anorm_mot_ls = -self.motLoss(x, x_anorm_mot)
+        # anorm_mot_ls=0
 
         # anomaly reconstruction loss
-        anormal_mot_rec_ls = self.motLoss(x_shuffle, x_r_shuffle)
+        cross_ls = self.crsLoss(x_mot_soft)
 
-        # nomal vs anomaly loss
+        # joint loss
+        join_ls = (self.hparams.motLsAlpha[0]*mot_rec_ls +
+                   self.hparams.motLsAlpha[1]*anorm_mot_ls +
+                   self.hparams.motLsAlpha[2]*cross_ls)
 
         # print(f'------------x_r:{x_r.requires_grad},x:{x.requires_grad}--------------')
-        logDic ={'aeLoss': aeLss}
+        logDic ={'mot_rec_ls': mot_rec_ls,
+                 'cross_ls':cross_ls,
+                 'anorm_mot_ls': anorm_mot_ls}
         self.log_dict(logDic, prog_bar=True)
 
-        return aeLss
+        return join_ls
 
     def validation_step(self, batch, batch_idx):
         aeScore, y = self.tst_val_step(batch)
@@ -104,11 +114,11 @@ class MotRecLossModule(pytorch_lightning.LightningModule):
         y = batch['label']
         # x = module_utils.filterCrops(x) # n, c, t, h, w
         x = x.reshape((-1, *x.shape[2:]))
-        x_r, z, enc_out, dec_out = self(x)
+        x_mot_soft, x_mot_rec = self.model(x)
         # x_r = self(x)
 
         # calculte anomaly score
-        aeScore = self.aeScore(x, x_r)
+        aeScore = self.aeScore(x, x_mot_rec)
         if aeScore.requires_grad == False:
             aeScore = aeScore.requires_grad_()
 

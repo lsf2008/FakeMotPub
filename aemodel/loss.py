@@ -41,15 +41,18 @@ class AeBaseLoss(BaseModule):
             ls = utils.cmpAeDiff(x, x_r)
         return ls
 
-class CrossLoss(AeBaseLoss):
+class CrossEntropyLoss(BaseModule):
     def __init__(self):
-        super(CrossLoss, self).__init__()
+        super(CrossEntropyLoss, self).__init__()
 
-    def forward(self, x_n, x_a):
-        # x_n is normal data, x_a is anomaly data, (patches_per_batch, c, t, h, w)
-        # 1. compute gradient of both
-        grd_n = utils.cmpTimGrd(x_n)
-        grd_a = utils.cmpTimGrd(x_a)
+    def forward(self, x_soft):
+        # prediction with softmax
+        b, _ = x_soft.shape
+
+        gt = torch.zeros((b, ), dtype=torch.long).to(x_soft.device)
+        gt[b//2:]=1
+
+        return torch.nn.functional.cross_entropy(x_soft, gt)
 
 class AeLoss(AeBaseLoss):
     def __init__(self, stdInd):
@@ -245,13 +248,14 @@ if __name__=='__main__':
     # tgl = TimeGrdLoss()
     # ael = AeLoss1()
     # print(ael(x,x_r))
-    from aemodel.ae_multi_out import AeMultiOut
-    input_shape = (3, 8, 32, 32)
-    code_length = 64
-    x = torch.randn((4, 3, 8, 32, 32))
-    end = AeMultiOut(input_shape, code_length)
-    x_r, z, enc_out, dec_out = end(x)
+    # from aemodel.ae_multi_out import AeMultiOut
+    # input_shape = (3, 8, 32, 32)
+    # code_length = 64
+    # x = torch.randn((4, 3, 8, 32, 32))
+    # end = AeMultiOut(input_shape, code_length)
+    # x_r, z, enc_out, dec_out = end(x)
     # dec_out = reversed(dec_out)
 
-    Aels = AeMultiLoss()
-    print(Aels(enc_out, dec_out))
+    x = torch.randn((7200, 2))
+    cel = CrossEntropyLoss()
+    print(cel(x))

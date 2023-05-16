@@ -255,6 +255,30 @@ def cmpTimGrdDiff(x, x_r):
     ls = torch.mean(ls, dim=list(range(x.dim() - 1, 0, -1)))
     return ls
 
+def shuffle_index(x_len=8):
+    '''
+    create a random index with length = x_len
+    Parameters
+    ----------
+    x_len
+    Returns list of index
+    -------
+
+    '''
+    # idx = torch.arange(0, x_len)
+    # print(idx)
+    idx = torch.randperm(x_len)
+    shf_index = []
+    # print('------',type(idx))
+    for i in range(x_len):
+        if i==0:
+            shf_index.append(int(idx[i]))
+        elif shf_index[-1]-idx[i] == -1:
+            shf_index[-1] = int(idx[i])
+            shf_index.append(int(idx[i-1]))
+        else:
+            shf_index.append(int(idx[i]))
+    return shf_index
 
 def log10(t):
     """

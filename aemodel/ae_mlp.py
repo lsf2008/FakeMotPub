@@ -6,7 +6,7 @@ from aemodel.blocks_3d import DownsampleBlock
 from aemodel.blocks_3d import UpsampleBlock
 from aemodel.layers.tsc import TemporallySharedFullyConnection
 from einops import rearrange
-from torchsummary import summary
+# from torchsummary import summary
 class Encoder(BaseModule):
     """
     ShanghaiTech model encoder.
@@ -57,16 +57,40 @@ class MLP(torch.nn.Module):
     def __init__(self, input_dim, hidden_dim, output_dim):
         super(MLP, self).__init__()
         self.fc1 = torch.nn.Linear(input_dim, hidden_dim)
-        self.fc2 = torch.nn.Linear(hidden_dim, hidden_dim)
+        # self.fc2 = torch.nn.Linear(hidden_dim, hidden_dim)
         self.fc3 = torch.nn.Linear(hidden_dim, output_dim)
         self.relu = torch.nn.ReLU()
 
     def forward(self, x):
         out = self.relu(self.fc1(x))
-        out = self.relu(self.fc2(out))
+        # out = self.relu(self.fc2(out))
         out = self.fc3(out)
         return out
 
+class MLP2out(torch.nn.Module):
+    def __init__(self, input_dim, hidden_dim, output_dim):
+        super(MLP2out, self).__init__()
+        self.fc1 = torch.nn.Linear(input_dim, hidden_dim)
+        self.fc2 = torch.nn.Linear(hidden_dim, hidden_dim)
+        self.fc31 = torch.nn.Linear(hidden_dim, 2)
+        self.fc3 = torch.nn.Linear(hidden_dim, output_dim)
+        self.relu = torch.nn.ReLU()
+
+    def forward(self, x):
+        '''
+        Parameters
+        ----------
+        x
+        Returns
+        -------
+        out1:   for cross entropy
+        out2:   for decoder
+        '''
+        out = self.relu(self.fc1(x))
+        # out = self.relu(self.fc2(out))
+        out1 = self.fc31(out)
+        out2 = self.fc3(out)
+        return out1, out2
 class Decoder(BaseModule):
     """
     ShanghaiTech model decoder.
@@ -119,11 +143,19 @@ class Decoder(BaseModule):
         return h
 class AeMlp(BaseModule):
     def __init__(self, input_shape, code_length):
+        '''
+        x -->Encoder -->MLP--->x'
+                     -->Decoder --->\hat{x}
+        Parameters
+        ----------
+        input_shape
+        code_length
+        '''
         super(AeMlp, self).__init__()
         self.input_shape = input_shape
         self.code_length = code_length
 
-        self.mlp = MLP(self.code_length, 128, 2)
+        self.mlp = MLP(self.code_length, 32, 2)
 
         self.encoder = Encoder(
             input_shape=input_shape,
@@ -159,14 +191,119 @@ class AeMlp(BaseModule):
         # divide into 2 branches
         # out = out.reshape((b, ))
         return out_mlp, out_enc
+class Ae2Mlps(BaseModule):
+    def __init__(self, input_shape, code_length):
+        '''
+        x -->Encoder -->MLP--->x'
+        x -->Encoder -->MLP--->x1 --->Decoder --->\hat{x}
+        Parameters
+        ----------
+        input_shape
+        code_length
+        '''
+        super(Ae2Mlps, self).__init__()
+        self.input_shape = input_shape
+        self.code_length = code_length
 
+        # x-->encoder -->MLP -->cross entropy
+        self.mlp_cross = MLP(self.code_length, 32, 2)
+        # x-->encoder -->MLP -->decoder
+        self.mlp_decoder = MLP(self.code_length, 128, 64)
+
+        self.encoder = Encoder(
+            input_shape=input_shape,
+            code_length=code_length
+        )
+
+        # Build decoder
+        self.decoder = Decoder(
+            code_length=code_length,
+            deepest_shape=self.encoder.deepest_shape,
+            output_shape=input_shape
+        )
+
+    def forward(self, x):
+        '''
+        :param x: b, c, t, h, w
+        :return: out_mlp: (b*t*h*w) * 2; out_enc: (b, c, t, h, w)
+        '''
+        # b, c,t, h, w = x.shape
+        out_enc = self.encoder(x)
+
+        out_mlp = rearrange(out_enc, 'b c t h w->b t h w c')
+        out_mlp_cross = self.mlp_cross(out_mlp)
+        # out = torch.einsum('bthwc->bcthw', out)
+
+        out_mlp_cross = rearrange(out_mlp_cross, 'b t h w c->(b t h w) c')
+        # softmax for crossentropy loss
+        # out_mlp_cross = torch.nn.functional.softmax(out_mlp_cross, dim =1)
+
+        # out_decoder = rearrange(out, 'b t h w c->b c t h w')
+        out_decoder = self.mlp_decoder(out_mlp)
+        out_decoder = rearrange(out_decoder, 'b t h w c->b c t h w')
+        out_decoder = self.decoder(out_decoder)
+
+        # divide into 2 branches
+        # out = out.reshape((b, ))
+        return out_mlp_cross, out_decoder
+
+class Ae1Mlp2(BaseModule):
+    def __init__(self, input_shape, code_length):
+        '''
+        x -->Encoder -->MLP--->x1'
+                            -->x2 --->Decoder --->\hat{x}
+        Parameters
+        ----------
+        input_shape
+        code_length
+        '''
+        super(Ae1Mlp2, self).__init__()
+        self.input_shape = input_shape
+        self.code_length = code_length
+
+        self.mlp = MLP2out(self.code_length, 128, 64)
+
+        self.encoder = Encoder(
+            input_shape=input_shape,
+            code_length=code_length
+        )
+
+        # Build decoder
+        self.decoder = Decoder(
+            code_length=code_length,
+            deepest_shape=self.encoder.deepest_shape,
+            output_shape=input_shape
+        )
+
+    def forward(self, x):
+        '''
+        :param x: b, c, t, h, w
+        :return: out_mlp: (b*t*h*w) * 2; out_enc: (b, c, t, h, w)
+        '''
+        # b, c,t, h, w = x.shape
+        out_enc = self.encoder(x)
+
+        out_mlp = rearrange(out_enc, 'b c t h w->b t h w c')
+        out_mlp, out_dec = self.mlp(out_mlp)
+        # out = torch.einsum('bthwc->bcthw', out)
+
+        out_mlp = rearrange(out_mlp, 'b t h w c->(b t h w) c')
+        # softmax for crossentropy loss
+        out_mlp = torch.nn.functional.softmax(out_mlp, dim =1)
+
+        out_dec = rearrange(out_dec, 'b t h w c->b c t h w')
+
+        out_dec = self.decoder(out_dec)
+
+        return out_mlp, out_dec
 if __name__ =='__main__':
     torch.backends.cudnn.enabled = False
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     x = torch.rand((2, 3, 8, 48, 48)).to(device)
     input_shape =[3, 8, 48, 48]
     code_length = 64
-    model = AeMlp(input_shape, code_length).to(device)
+    # model = AeMlp(input_shape, code_length).to(device)
+    model = Ae1Mlp2(input_shape, code_length).to(device)
     soft, dec = model(x)
     # summary(model, input_shape)
     print(soft.shape, dec.shape)

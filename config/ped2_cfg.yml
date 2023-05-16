@@ -27,7 +27,7 @@ frames_per_second: 30
 input_shape: [3, 8, 48, 48] # patch size h,w is x*4
 
 # device_number: 1
-batch_size: 5
+batch_size: 3
 num_works: 0
 #ped2
 #shortSide_size: 240 # resized short size of video frame and keep the width/height radio
@@ -60,15 +60,13 @@ updtR_epoches: 15
 # model parameters
 # input_shape: [3, 8, 32, 32]
 code_length: 64
-nu: 0.01
-objFlg: 'soft'
+
 
 # loss parameters
 oneLsAlpha: 1 #1-0.827, 2-0.839 #5-0.826
 aeLsAlpha: 1
 gdLsAlpha: 1 #1
-motLsAlpha: 25 #20 # 20-0.839, 50-0.81，10-0.830
-cntNum: 1 # clusters
+motLsAlpha: [20, 1, 1] #(mot_rec, anormaly_mot, cross)
 
 #score combination coefficients list
 cmbScoreWght: [-2, -1, -0.5, -0.1, 0, 0.1, 0.5, 1, 2, 5]

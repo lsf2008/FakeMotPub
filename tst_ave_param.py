@@ -6,7 +6,7 @@ import pytorch_lightning as pl
 import time
 import prettytable
 from dataset.video_dataloader import VideoDataLoader
-from trainer.mot_class_module import MultMotRecLossModule
+from trainer.fakeMot_cross_module import MultMotRecLossModule
 from trainer.mult_ae_mot_recLoss_module import MultAeMotRecLossModule
 from trainer.trainer import trainer_vd_module
 

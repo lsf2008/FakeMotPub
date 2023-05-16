@@ -6,8 +6,8 @@ from config.param_seting import initial_params
 from trainer.trainer import train_trainer,trainer_vd_module
 # from aemodel.autoencoder import convAE
 from dataset.video_dataloader import VideoDataLoader
-from aemodel.ae_mlp import AeMlp
-from trainer.mot_class_module import MotRecLossModule
+from aemodel.ae_mlp import AeMlp, Ae2Mlps, Ae1Mlp2
+from trainer.fakeMot_cross_module import FakeMotCrossModule
 from trainer.mult_recLoss_module_finch import MultRecLossModuleFinch
 import pytorch_lightning as pl
 import prettytable as pt
@@ -27,14 +27,14 @@ if flg =='ped2':
     # model = AeMultiOut(input_shape=args.input_shape,
     #                    code_length=args.code_length,
     #                    layers=args.wght_layers)
-    model = AeMlp(input_shape=args.input_shape,
+    model = Ae1Mlp2(input_shape=args.input_shape,
                   code_length=args.code_length)
     # module
     # ------------------only ae-----------------
     # mdl = MultAERecLossModule(model, **vars(args))
 
     # --------------------only motion--------------
-    mdl = MultAeMotRecLossModule(model, **vars(args))
+    mdl = FakeMotCrossModule(model, **vars(args))
 
     # 使用module训练模型
     res = trainer_vd_module(args, mdl, vd)
