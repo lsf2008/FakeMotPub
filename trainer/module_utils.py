@@ -24,6 +24,33 @@ def obtAScoresFrmOutputs(outputs):
 
     return scoreDic, y_true
 
+def obtMotAllScoresFrmOutputs(outputs):
+    '''
+    # obtain all scores and corresponding y
+    :param outputs: validation or test end outputs
+    :return: dict{scores:}, label:list...
+
+    '''
+    softScores = []
+    motScores = []
+    y_true = []
+    for i, out in enumerate(outputs):
+        aeScore, motScore, y = out
+        softScores.extend(aeScore)
+        motScores.extend(motScore)
+        y_true.extend(y)
+
+    # normalize
+    softScores = torch.tensor(softScores)
+    softScores = utils.normalize(softScores)
+
+    motScores = torch.tensor(motScores)
+    motScores = utils.normalize(motScores)
+    scoreDic = {'predScores': softScores,
+                'motScores': motScores}
+
+    return scoreDic, y_true
+
 def obtAllScoresFrmOutputs(outputs):
     '''
     # obtain all scores and corresponding y

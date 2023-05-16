@@ -117,16 +117,19 @@ class FakeMotCrossModule(pytorch_lightning.LightningModule):
         x_mot_soft, x_mot_rec = self.model(x)
         # x_r = self(x)
 
-        # calculte anomaly score
+        # calculate anomaly score
         motScore = self.motScore(x, x_mot_rec)
-        # if aeScore.requires_grad == False:
-        #     aeScore = aeScore.requires_grad_()
 
-        return motScore, y
+        # --------------------prediction score----------------------
+        # use the prediction as score directly.
+        x_mot_softScore = x_mot_soft
+
+        return motScore, x_mot_softScore, y
 
     def tst_val_step_end(self, outputs, logStr = 'val_roc'):
         # obtain all scores and corresponding y
-        scores, y = module_utils.obtAScoresFrmOutputs(outputs)
+        # scores, y = module_utils.obtAScoresFrmOutputs(outputs)
+        scores,y = module_utils.obtMotAllScoresFrmOutputs(outputs)
         # self.res['epoch'] = self.current_epoch
 
         # compute auc, scores: dictory
