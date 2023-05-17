@@ -16,7 +16,7 @@ import torch
 from aemodel.OneClsBase import OneClassBase
 from torch import nn
 import utils as utils
-from itertools import chain
+from einops import rearrange
 
 class AeBaseLoss(BaseModule):
     def __init__(self, stdInd):
@@ -124,6 +124,108 @@ class TimeGrdLoss(TimeBaseLoss):
 
         return torch.mean(ls)
 
+class MotConstrastiveLoss(BaseModule):
+    def __init__(self, tau=0.5):
+        super(MotConstrastiveLoss, self).__init__()
+        self.tau = tau
+    def forward(self, x):
+        self.cmp_mot_constrastive_loss(x, self.tau)
+    def shuffle_index(self, n):
+        '''
+        shuffle the index
+        '''
+        idx = torch.randperm(n)
+        s = torch.abs(idx[1:] - idx[:-1])
+        while any(s == 1):
+            idx = torch.randperm(n)  # shuffle the indices of idx in-place. Julia doesn't have a random permutation.
+            s = torch.abs(idx[1:] - idx[:-1])
+
+        return idx
+
+    def cmp_cosin_dis(self, x_grd_i, x_grd_j):
+        ''' compute cosine distance between x_grd[:,:,i_idx,:]-x_grd[:,:,j_idx,:]
+        Parameters
+        ----------
+        x_grd : tensor with (b,c,t,h,w)
+            tensor
+        i_idx : int
+            index at the time axis
+        j_idx : int
+            index at the time axis
+
+        Returns
+        -------
+        _type_
+            cosine distance (b,)
+        '''
+        # cosine distance, (b,c, h,w)
+        x_grd_i = rearrange(x_grd_i, 'b c h w -> b (h w c)')
+        x_grd_j = rearrange(x_grd_j, 'b c h w -> b (h w c)')
+        cosine_dist = torch.nn.functional.cosine_similarity(x_grd_i, x_grd_j, dim=1)  # dim=1 means compute
+        return cosine_dist
+
+    def cmp_costrastive_numerator(self, x_grd_i, x_grd_j, tau):
+        dis = self.cmp_cosin_dis(x_grd_i, x_grd_j)
+        dis = torch.pow(dis, 2) / tau
+        return torch.mean(dis)
+
+    def cmp_costrastive_denominator(self, x_grd_i, x_shuffle_grd, tau):
+        '''compute the cosniner denominator for the costrastive denominator function.
+        Parameters
+        ----------
+        x_grd_i : tensor with (b,c,h,w)
+            one gradient tensor of positive sample
+        x_shuffle_grd : tensor with (b,c,t,h,w)
+            gradient tensors of shuffled samples from the negative sample.
+        tau:  scalar
+         temperature
+        Returns
+        -------
+        tesor (1,)
+        '''
+        # compute denominator
+        x_shuffle_grd.shape[2]
+        # shuffle_dis=[]
+        # for i in range(x_shuffle_grd.shape[2]):
+        shuffle_dis = [self.cmp_cosin_dis(x_grd_i, x_shuffle_grd[:, :, i, :, :]) for i in range(x_shuffle_grd.shape[2])]
+        shuffle_dis = torch.stack(shuffle_dis)
+        shuffle_dis = torch.pow(shuffle_dis, 2) / tau
+
+        return torch.mean(shuffle_dis)
+
+    def cmp_mot_constrastive_loss(self, x, tau):
+        '''compute the motiality and constrastive loss for the given input.
+
+        Parameters
+        ----------
+        x : tensor with (b,c,t,h,w)
+            input tensor
+        tau : float
+            temperature parameter
+
+        Returns
+        -------
+        computed_loss: scalar tensor (1,)
+        '''
+        # cos = torch.nn.CosineSimilarity(dim=)
+        seqLen = x.shape[2]
+        x_shuffle = x[:, :, self.shuffle_index(seqLen), :, :]
+
+        x_grd = torch.abs(x[:, :, 1:, :, :] - x[:, :, :-1, :,
+                                              :])  # the gradient of x_grd is zero, because x_grd is a symmetric tensor
+        x_shuffle_grd = torch.abs(x_shuffle[:, :, 1:, :, :] - x_shuffle[:, :, :-1, :, :])
+
+        i_idx, j_idx = torch.randint(0, seqLen - 1, (2,))
+
+        # compute numerator
+        x_grd_i, x_grd_j = x_grd[:, :, i_idx, :, :], x_grd[:, :, j_idx, :, :]
+
+        numer = self.cmp_costrastive_numerator(x_grd_i, x_grd_j, tau)  # 0.9999999999999999  0.99999999
+        # compute denominator
+        deno = self.cmp_costrastive_denominator(x_grd_i, x_shuffle_grd, tau)
+
+        loss = numer / deno
+        return loss
 
 class OneClassLoss(OneClassBase):
     def __init__(self, k, nu):
