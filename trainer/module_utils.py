@@ -24,6 +24,38 @@ def obtAScoresFrmOutputs(outputs):
 
     return scoreDic, y_true
 
+def obtAllScoresFrmDicOutputs(dicList):
+    '''
+    dicList is dictionary, maybe it is like:
+    dicList=[{'classScores': 0.5,
+                    'motScores': 0.6,
+                    'aeScores': 0.7,
+                    'label': 1},
+                    {'classScores': 0.6,
+                    'motScores': 0.5,
+                    'aeScores': 0.6,
+                    'label': 0}]
+    :param outputs:
+    :return:
+    '''
+    keys = list(dicList[0].keys())
+
+    # init list
+    lst = [[] for i in range(len(keys))]
+
+    for x in dicList:
+        # print(x)
+        cnt = 0
+        for key, value in x.items():
+            lst[cnt].append(value)
+            cnt += 1
+
+    resDic = {}
+
+    for i in range(len(lst) - 1):
+        resDic[keys[i]] = lst[i]
+
+    return resDic, lst[-1]
 def obtMotAllScoresFrmOutputs(outputs):
     '''
     # obtain all scores and corresponding y
@@ -35,7 +67,7 @@ def obtMotAllScoresFrmOutputs(outputs):
     motScores = []
     y_true = []
     for i, out in enumerate(outputs):
-        aeScore, motScore, y = out
+        motScore, aeScore, y = out
         softScores.extend(aeScore)
         motScores.extend(motScore)
         y_true.extend(y)
