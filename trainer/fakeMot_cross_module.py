@@ -3,7 +3,7 @@ import torch
 
 import utils
 from aemodel.loss import AeLoss, TimeGrdLoss, CrossEntropyLoss
-from aemodel.abnEval import AeScore, TimeGrdScore
+from aemodel.abnEval import AeScore, TimeGrdScore, ClassScore
 from sklearn.metrics import roc_auc_score
 import torch.optim.lr_scheduler as lrs
 
@@ -24,6 +24,7 @@ class FakeMotCrossModule(pytorch_lightning.LightningModule):
         self.crsLoss = CrossEntropyLoss()
         self.aeScore = AeScore(layers, batch_size=self.hparams.batch_size)
         self.motScore = TimeGrdScore(self.hparams.batch_size)
+        self.classScore = ClassScore(self.hparams.batch_size)
         # test results
         self.res={'maxAuc':0, 'coef':0}
 
@@ -75,7 +76,7 @@ class FakeMotCrossModule(pytorch_lightning.LightningModule):
         x_mot_soft, x_mot_ae = self.model(x_all)
 
         # --------------compute the loss ---------------
-        # normal reconstruction loss
+        # normal reconstruction loss, norm motion + anormal motion
         x_norm_mot, x_anorm_mot = torch.split(x_mot_ae, x.shape[0], dim=0)
         mot_rec_ls = self.motLoss(x, x_norm_mot)
         anorm_mot_ls = -self.motLoss(x, x_anorm_mot)
@@ -98,8 +99,8 @@ class FakeMotCrossModule(pytorch_lightning.LightningModule):
         return join_ls
 
     def validation_step(self, batch, batch_idx):
-        aeScore, y = self.tst_val_step(batch)
-        return (aeScore, y)
+        motScore, mot_softScore, y = self.tst_val_step(batch)
+        return (motScore, mot_softScore, y)
 
     def validation_epoch_end(self, outputs):
         self.tst_val_step_end(outputs, logStr='val_roc')
@@ -122,7 +123,7 @@ class FakeMotCrossModule(pytorch_lightning.LightningModule):
 
         # --------------------prediction score----------------------
         # use the prediction as score directly.
-        x_mot_softScore = x_mot_soft
+        x_mot_softScore = self.classScore(x_mot_soft)
 
         return motScore, x_mot_softScore, y
 

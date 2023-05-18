@@ -2,7 +2,7 @@
 from aemodel.ae_multi_out_wght import AeMultiOut
 from config.param_seting import initial_params
 from trainer.trainer import train_trainer
-from aemodel.ae_mlp import Ae1Mlp2, Ae2Mlps
+from aemodel.ae_mlp import Ae1Mlp2, Ae2Mlps, AeMlp
 
 import pytorch_lightning as pl
 import time
@@ -44,7 +44,7 @@ if flg =='ped2_mot':
         tbl.add_row([layer, res['maxAuc'], res['coef']])
     end_time = time.time()
     print(tbl)
-    with open('data/ped2/fakeMot_Ae2Mlps.txt', 'w') as f:
+    with open('data/ped2/fakeMot_Ae2Mlps_motSoftScore.txt', 'w') as f:
         f.write(tbl.get_string())
 
     print(f'running time:{(end_time-stat_time)/60} m')

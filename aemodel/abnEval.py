@@ -78,6 +78,25 @@ class AeScore(AeBaseLoss):
         #     ls = torch.tensor(0)
         return ls
 
+class ClassScore(BaseModule):
+    '''
+    anormaly score using the output of prediction trained with crossEntropy
+    '''
+    def __init__(self, batch_size):
+        super(ClassScore, self).__init__()
+        self.batch_size = batch_size
+
+    def forward(self, x):
+        '''
+        Parameters
+        ----------
+        x (b,2)
+        Returns
+        -------
+        '''
+        pred = x[:, 1]
+        pred = pred.reshape((self.batch_size, -1))
+        return torch.max(pred, dim=1)[0]
 
 class TimeGrdScore(BaseModule):
     def __init__(self, batch_size):
@@ -159,9 +178,9 @@ if __name__ == '__main__':
 
 
     # =============ae score==============
-    aes = AeScore(2)
-    gds = GdScore(2)
-    print(gds(x, x_r), aes(x, x_r))
+    # aes = AeScore(2)
+    # gds = GdScore(2)
+    # print(gds(x, x_r), aes(x, x_r))
 
     # ==============gradient score==========
     # grd = GdScore(2)
@@ -176,3 +195,8 @@ if __name__ == '__main__':
     # z=torch.rand((6,64))
     # oc = OneClsScore()
     # dis_k =oc(cnter, R, z)
+    # ============class score===========
+    x = torch.rand((7200, 2))
+    cls1 = ClassScore(3)
+
+    print(cls1(x))

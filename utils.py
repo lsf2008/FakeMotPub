@@ -263,22 +263,13 @@ def shuffle_index(x_len=8):
     x_len
     Returns list of index
     -------
-
     '''
-    # idx = torch.arange(0, x_len)
-    # print(idx)
     idx = torch.randperm(x_len)
-    shf_index = []
-    # print('------',type(idx))
-    for i in range(x_len):
-        if i==0:
-            shf_index.append(int(idx[i]))
-        elif shf_index[-1]-idx[i] == -1:
-            shf_index[-1] = int(idx[i])
-            shf_index.append(int(idx[i-1]))
-        else:
-            shf_index.append(int(idx[i]))
-    return shf_index
+    s = torch.abs(idx[1:] - idx[:-1])
+    while any(s == 1):
+        idx = torch.randperm(x_len)  # shuffle the indices of idx in-place. Julia doesn't have a random permutation.
+        s = torch.abs(idx[1:] - idx[:-1])
+    return idx
 
 def log10(t):
     """

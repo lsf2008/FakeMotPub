@@ -66,7 +66,7 @@ code_length: 64
 oneLsAlpha: 1 #1-0.827, 2-0.839 #5-0.826
 aeLsAlpha: 1
 gdLsAlpha: 1 #1
-motLsAlpha: [20, 1, 1] #(mot_rec, anormaly_mot, cross)
+motLsAlpha: [10, 1, 1] #(mot_rec, anormaly_mot, cross)
 
 #score combination coefficients list
 cmbScoreWght: [-2, -1, -0.5, -0.1, 0, 0.1, 0.5, 1, 2, 5]
