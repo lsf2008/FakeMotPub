@@ -1,16 +1,53 @@
 from aemodel.ae_multi_out_wghts import AeMultiOut
 from config.param_seting import initial_params
 from trainer.trainer import train_trainer
-from aemodel.autoencoder import convAE
+from trainer.fakeMot_cross_module import FakeMotCrossModule
 import pytorch_lightning as pl
 import time
 import prettytable
 from dataset.video_dataloader import VideoDataLoader
-from trainer.fakeMot_cross_module import MultMotRecLossModule
+from aemodel.ae_mlp import Ae1Mlp2, Ae2Mlps, AeMlp, Ae1Mlp3,Ae3Mlps
 from trainer.mult_ae_mot_recLoss_module import MultAeMotRecLossModule
 from trainer.trainer import trainer_vd_module
 
-flg = 'recLayers'
+flg = 'mot'
+
+if flg=='mot':
+    pl.seed_everything(999999)
+    stat_time = time.time()
+    print('ave-motion-ae'.center(100, '-'))
+    tbl = prettytable.PrettyTable()
+    tbl.field_names = ['layers', 'auc', 'coef']
+    layers = [[20, 1, 5, 0.5], [15, 1, 10, 0], [20, 1, 10, 0],
+              [10, 2, 10, 0.3],
+              [15, 1, 5, 0.3],
+              [10, 1, 1, 0.4]]
+
+    for layer in layers:
+        args = initial_params('config/ave_cfg.yml')
+        args.motLsAlpha = layer
+
+        vd = VideoDataLoader(**vars(args))
+        # 模型
+        model = Ae1Mlp2(input_shape=args.input_shape,
+                        code_length=args.code_length)
+        # module
+        # ------------------only ae-----------------
+        # mdl = MultAERecLossModule(model, **vars(args))
+
+        # -------------------- motion--------------
+        mdl = FakeMotCrossModule(model, **vars(args))
+
+        # 使用module训练模型
+        res = trainer_vd_module(args, mdl, vd)
+
+        tbl.add_row([layer, res['maxAuc'], res['coef']])
+    end_time = time.time()
+    print(tbl)
+    with open('data/ave/AefakeMot_Ae1Mlp2_2layerMLP.txt', 'a') as f:
+        f.write(tbl.get_string())
+
+    print(f'running time:{(end_time - stat_time) / 60} m')
 
 if flg == 'blkSize':
     input_shapes=[[3, 8, 32, 32], [3, 8, 56, 56], [3, 8, 64, 64], [3, 8, 24, 24]]

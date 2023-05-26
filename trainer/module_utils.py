@@ -23,6 +23,25 @@ def obtAScoresFrmOutputs(outputs):
     scoreDic = {'aeScores': aeScores}
 
     return scoreDic, y_true
+def normalizeDicScore(scoreDic):
+    '''scoreDIc is a dictionary, like:
+    {'classScores': [tensor(0.5000), tensor(0.5000), tensor(0.5000), tensor(0.6000), tensor(0.6000), tensor(0.6000)], 'motScores': [tensor(0.1000), tensor(0.1000), tensor(0.1000), tensor(0.3000), tensor(0.3000), tensor(0.3000)], 'aeScores': [tensor(0.7000), tensor(0.7000), tensor(0.7000), tensor(0.1000), tensor(0.1000), tensor(0.1000)]}, [tensor(1), tensor(1), tensor(1), tensor(0), tensor(0), tensor(0)]
+
+    Parameters
+    ----------
+    scoreDic : dictorary-like object. The output of obtAllScoresFrmDicOutputs. It is a dictionary. The keys are the names of the inputs
+
+    Returns
+    -------
+    dictionary
+    '''
+    sDic ={}
+    for key, vaules in scoreDic.items():  # keys is string, vaules is float tensor.  vaules is float tensor.  v
+        vaules = torch.tensor(vaules)
+        maxs = torch.max((vaules) )
+        mins = torch.min((vaules))
+        sDic[key]=(vaules - mins) / (maxs - mins + 1e-7)
+    return sDic
 
 def obtAllScoresFrmDicOutputs(dicList):
     '''
@@ -47,7 +66,7 @@ def obtAllScoresFrmDicOutputs(dicList):
         # print(x)
         cnt = 0
         for key, value in x.items():
-            lst[cnt].append(value)
+            lst[cnt].extend(value)
             cnt += 1
 
     resDic = {}
@@ -55,7 +74,10 @@ def obtAllScoresFrmDicOutputs(dicList):
     for i in range(len(lst) - 1):
         resDic[keys[i]] = lst[i]
 
+    resDic = normalizeDicScore(resDic)
+
     return resDic, lst[-1]
+
 def obtMotAllScoresFrmOutputs(outputs):
     '''
     # obtain all scores and corresponding y
@@ -130,12 +152,8 @@ def cmbScoreWght(scoreDic, weight=None):
             cmbScores[1] = cmbScore
         else:
             for p in itertools.combinations(weight, itms):
-                cmbScore = torch.zeros_like(list(scoreDic.values())[0])
-                allVs = list(scoreDic.values())
-                for i in range(len(allVs)):
-                    cmbScore += allVs[i]*p[i]
+                cmbScores[p] =torch.stack(list(scoreDic.values())).t()@torch.tensor(p, dtype=torch.float).unsqueeze(1)
 
-                cmbScores[p] = cmbScore
     return cmbScores
 
 def calAUC(prob, labels):

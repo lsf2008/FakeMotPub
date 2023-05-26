@@ -85,29 +85,15 @@ def loadDatasetBg(pth, h, w):
 
 
 class VideoDataLoader(pytorch_lightning.LightningDataModule):
-    def __init__(self,
-                 batch_size,
-                 num_works=0,
-                 mean=[0.45, 0.45, 0.45],
-                 std=[0.225, 0.225, 0.225],
-                 input_shape=[1, 8, 32, 32],
-                 raw_shape=[1, 16, 360, 640],
-                 num_frames=8,
-                 frames_per_second=30,
-                 shortSide_size=200,
-                 **kwargs):
+    def __init__(self, **kwargs):
         super(VideoDataLoader, self).__init__()
 
-        self.save_hyperparameters(ignore=['inputModel','layers',
-                                          'weight_decay','lr_scheduler','lr',
-                                          'lr_decay_steps','lr_decay_rate',
-                                          'lr_decay_min_lr','cmbScoreWght',
-                                          ])
-        self.hparams.raw_shape = updtRawShape(raw_shape, shortSide_size)
+        self.save_hyperparameters(ignore='inputModel')
+        self.hparams.raw_shape = updtRawShape(self.hparams.raw_shape, self.hparams.shortSide_size)
         self.hparams.side_shape = self.hparams.raw_shape[2:]
 
-        self.clip_duration = num_frames / frames_per_second
-        self.stride = self.hparams.stride / frames_per_second
+        self.clip_duration = self.hparams.num_frames / self.hparams.frames_per_second
+        self.stride = self.hparams.stride / self.hparams.frames_per_second
         if self.hparams.bgPth is not None:
             h, w = self.hparams.raw_shape[2:]
             bg = loadDatasetBg(self.hparams.bgPth, h, w)

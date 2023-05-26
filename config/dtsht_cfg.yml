@@ -6,7 +6,7 @@ num_frames: &num_frames 16
 train_dataPath: 'E:/dataset/shanghaitech/label/train.csv'
 val_dataPath: 'E:/dataset/shanghaitech/label/test.csv'
 tst_dataPath: 'E:/dataset/shanghaitech/label/test.csv'
-bgPth: 'dataset/bg/train_01_bg.pt'
+bgPth:
 #color images, avenue dataset for patch
 #mean: [0.1004, 0.0956, 0.0938]
 #std: [0.2121, 0.2025, 0.2027]
@@ -34,14 +34,14 @@ std: [0.1468, 0.1525, 0.1552]
 frames_per_second: 30
 # side_size: 200
 #if shortSide_size: 160, and crop_size: [3, 8, 160, 280], do the detection on whole image
-crop_size: [3, 8, 48, 48] # patch size h,w is x*4
+input_shape: [3, 8, 48, 48] # patch size h,w is x*4
 
 # device_number: 1
 batch_size: 2
 num_works: 0
 #ped2
 #shortSide_size: 240 # resized short size of video frame and keep the width/height radio
-shortSide_size: 320
+shortSide_size: 240
 
 #ped2 dataset
 #raw_shape: [3, 16, 240, 360] # original size of video frame
@@ -74,10 +74,7 @@ nu: 0.01
 objFlg: 'soft'
 
 # loss parameters
-aeLsAlpha: 1
-gdLsAlpha: 1 #1
-motLsAlpha: 25 #20 # 20-0.839, 50-0.81，10-0.830
-cntNum: 1 # clusters
+motLsAlpha: [10, 2, 10, 0] #(mot_rec, anormaly_mot, cross)
 
 #score combination coefficients list
 cmbScoreWght: [-2, -1, -0.5, -0.1, 0, 0.1, 0.5, 1, 2, 5]

@@ -28,13 +28,13 @@ class AeFakeMotCrossModule(pytorch_lightning.LightningModule):
         # test results
         self.res={'maxAuc':0, 'coef':0}
 
-
     def forward(self, x):
 
         x_mot_soft, x_mot_rec = self.model(x)
         # x_r = self.model(x)
         # z = z.reshape(z.shape[0], -1)
         return x_mot_soft, x_mot_rec
+
     def configure_optimizers(self):
         if hasattr(self.hparams, 'weight_decay'):
             weight_decay = self.hparams.weight_decay
@@ -73,7 +73,7 @@ class AeFakeMotCrossModule(pytorch_lightning.LightningModule):
         x_all = torch.cat((x, x_shuffle), dim=0)
 
         # b, c, t, h, w = x.shape
-        x_mot_soft, x_mot_ae = self.model(x_all)
+        x_mot_soft, x_mot_ae, x_app = self.model(x_all)
 
         # --------------compute the loss ---------------
         # normal reconstruction loss, norm motion + anormal motion
@@ -83,29 +83,31 @@ class AeFakeMotCrossModule(pytorch_lightning.LightningModule):
         anorm_mot_ls = -self.motLoss(x, x_anorm_mot)
 
         #--------------appearance loss--------------------
-        aeLoss = self.aeLoss(x, x_norm_mot)
+        # aeLoss = self.aeLoss(x_all, x_mot_ae)
+        x_norm_app, x_anorm_app = torch.split(x_app, x.shape[0], dim=0)
+        aeLoss1 = self.aeLoss(x, x_norm_app)
 
         # -------------anomaly reconstruction loss----------------
         cross_ls = self.crsLoss(x_mot_soft)
 
         # joint loss
         join_ls = (self.hparams.motLsAlpha[0]*mot_rec_ls +
-                   self.hparams.motLsAlpha[1]*anorm_mot_ls +
-                   self.hparams.motLsAlpha[2]*cross_ls +
-                   self.hparams.motLsAlpha[3]*aeLoss)
+                   self.hparams.motLsAlpha[1] * cross_ls +
+                   self.hparams.motLsAlpha[2]*anorm_mot_ls +
+                   self.hparams.motLsAlpha[3]*aeLoss1)
 
         # print(f'------------x_r:{x_r.requires_grad},x:{x.requires_grad}--------------')
         logDic ={'mot_rec_ls': mot_rec_ls,
-                 'cross_ls':cross_ls,
+                 'cross_ls': cross_ls,
                  'anorm_mot_ls': anorm_mot_ls,
-                 'aeLoss': aeLoss}
+                 'aeLoss1': aeLoss1}
         self.log_dict(logDic, prog_bar=True)
 
         return join_ls
 
     def validation_step(self, batch, batch_idx):
-        motScore, mot_softScore, y = self.tst_val_step(batch)
-        return (motScore, mot_softScore, y)
+        scoreDic= self.tst_val_step(batch)
+        return scoreDic
 
     def validation_epoch_end(self, outputs):
         self.tst_val_step_end(outputs, logStr='val_roc')
@@ -120,7 +122,7 @@ class AeFakeMotCrossModule(pytorch_lightning.LightningModule):
         y = batch['label']
         # x = module_utils.filterCrops(x) # n, c, t, h, w
         x = x.reshape((-1, *x.shape[2:]))
-        x_mot_soft, x_mot_rec = self.model(x)
+        x_mot_soft, x_mot_rec, x_app = self.model(x)
         # x_r = self(x)
 
         # ------------------calculate anomaly score-----------------
@@ -131,14 +133,12 @@ class AeFakeMotCrossModule(pytorch_lightning.LightningModule):
         class_softScore = self.classScore(x_mot_soft)
 
         # appearance score
-        aeScore = self.aeScore(x, x_mot_rec)
+        aeScore = self.aeScore(x, x_app)
 
         scoreDic = {'classScores': class_softScore,
                     'motScores': motScore,
                     'aeScores': aeScore,
                     'label': y}
-
-
         return scoreDic
 
     def tst_val_step_end(self, outputs, logStr = 'val_roc'):

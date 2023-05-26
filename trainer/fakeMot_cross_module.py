@@ -99,8 +99,8 @@ class FakeMotCrossModule(pytorch_lightning.LightningModule):
         return join_ls
 
     def validation_step(self, batch, batch_idx):
-        motScore, mot_softScore, y = self.tst_val_step(batch)
-        return (motScore, mot_softScore, y)
+        scoreDic= self.tst_val_step(batch)
+        return scoreDic
 
     def validation_epoch_end(self, outputs):
         self.tst_val_step_end(outputs, logStr='val_roc')
@@ -125,12 +125,16 @@ class FakeMotCrossModule(pytorch_lightning.LightningModule):
         # use the prediction as score directly.
         x_mot_softScore = self.classScore(x_mot_soft)
 
-        return motScore, x_mot_softScore, y
+        scoreDic = {'classScores': x_mot_softScore,
+                    'motScores': motScore,
+                    'label': y}
+
+        return scoreDic
 
     def tst_val_step_end(self, outputs, logStr = 'val_roc'):
         # obtain all scores and corresponding y
         # scores, y = module_utils.obtAScoresFrmOutputs(outputs)
-        scores,y = module_utils.obtMotAllScoresFrmOutputs(outputs)
+        scores,y = module_utils.obtAllScoresFrmDicOutputs(outputs)
         # self.res['epoch'] = self.current_epoch
 
         # compute auc, scores: dictory
