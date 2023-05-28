@@ -13,15 +13,16 @@ from trainer.Ae_fakeMot_cross_module import AeFakeMotCrossModule
 from trainer.mult_ae_mot_recLoss_module import MultAeMotRecLossModule
 from trainer.trainer import trainer_vd_module
 
-flg = 'blkSize'
+flg = 'hiddenLayers'
 
-if flg =='ped2_mot':
+if flg =='ped2_motLoss':
     # pl.seed_everything(555555)
     stat_time = time.time()
     print('ped2-motion'.center(100, '-'))
     tbl = prettytable.PrettyTable()
     tbl.field_names=['layers', 'auc', 'coef']
-    layers = [[25, 1, 10, 0.4],[20, 2, 10, 0.4]]
+    layers = [[20,1,0], [20, 0, 0], [20, 1, 10],
+              [0, 1, 10], [20, 0, 10]]
 
     for layer in layers:
         args = initial_params('config/ped2_cfg.yml')
@@ -44,12 +45,12 @@ if flg =='ped2_mot':
         tbl.add_row([layer, res['maxAuc'], res['coef']])
     end_time = time.time()
     print(tbl)
-    with open('data/ped2/Ae2Mlps_randomSd.txt', 'a') as f:
+    with open('data/ped2/Ae1Mlp2_motLoss_ablation.txt', 'a') as f:
         f.write(tbl.get_string())
 
     print(f'running time:{(end_time-stat_time)/60} m')
 
-if flg =='ped2_mot_ae':
+if flg =='ped2_mlps':
     pl.seed_everything(999999)
     stat_time = time.time()
     print('ped2-motion-ae'.center(100, '-'))
@@ -59,20 +60,21 @@ if flg =='ped2_mot_ae':
               [20, 1, 0.1, 0.3],
               [10, 1, 0.2, 0.3], [10, 1, 0.2, 0.5]]
 
+
     for layer in layers:
         args = initial_params('config/ped2_cfg.yml')
         args.motLsAlpha = layer
 
         vd = VideoDataLoader(**vars(args))
         # 模型
-        model = Ae1Mlp3(input_shape=args.input_shape,
+        model = Ae2Mlps(input_shape=args.input_shape,
                         code_length=args.code_length)
         # module
         # ------------------only ae-----------------
         # mdl = MultAERecLossModule(model, **vars(args))
 
         # -------------------- motion--------------
-        mdl = AeFakeMotCrossModule(model, **vars(args))
+        mdl = FakeMotCrossModule(model, **vars(args))
 
         # 使用module训练模型
         res = trainer_vd_module(args, mdl, vd)
@@ -80,14 +82,48 @@ if flg =='ped2_mot_ae':
         tbl.add_row([layer, res['maxAuc'], res['coef']])
     end_time = time.time()
     print(tbl)
-    with open('data/ped2/AefakeMot_Ae1Mlp3_2layerMLP1.txt', 'w') as f:
+    with open('data/ped2/Ae1Mlp3_3layerMLP.txt', 'a') as f:
         f.write(tbl.get_string())
 
     print(f'running time:{(end_time - stat_time) / 60} m')
 
-if flg == 'blkSize':
-    input_shapes = [[3, 8, 48, 48]]
+if flg =='hiddenLayers':
     pl.seed_everything(999999)
+    stat_time = time.time()
+    print('ped2-motion'.center(100, '-'))
+    tbl = prettytable.PrettyTable()
+    tbl.field_names = ['mlpHiddenLayers', 'auc', 'coef']
+    layers = [8, 16, 32, 64, 128, 256]
+
+    for layer in layers:
+        args = initial_params('config/ped2_cfg.yml')
+        args.mlp_hidden = layer
+
+        vd = VideoDataLoader(**vars(args))
+        # 模型
+        model = Ae1Mlp2(input_shape=args.input_shape,
+                        code_length=args.code_length,
+                        mlp_hidden=args.mlp_hidden)
+        # module
+        # ------------------only ae-----------------
+        # mdl = MultAERecLossModule(model, **vars(args))
+
+        # -------------------- motion--------------
+        mdl = FakeMotCrossModule(model, **vars(args))
+
+        # 使用module训练模型
+        res = trainer_vd_module(args, mdl, vd)
+
+        tbl.add_row([layer, res['maxAuc'], res['coef']])
+    end_time = time.time()
+    print(tbl)
+    with open('data/ped2/Ae1Mlp2_hiddenLayers.txt', 'a') as f:
+        f.write(tbl.get_string())
+
+    print(f'running time:{(end_time - stat_time) / 60} m')
+if flg == 'blkSize':
+    input_shapes = [[3, 8, 40, 40]]
+    # pl.seed_everything(999999)
     stat_time = time.time()
 
     tbl = prettytable.PrettyTable()
@@ -122,4 +158,6 @@ if flg == 'blkSize':
 
     print(f'running time:{(end_time - stat_time) / 60} m')
 
+if flg == 'mlps':
+    import importlib
 

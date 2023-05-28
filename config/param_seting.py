@@ -24,7 +24,7 @@ def load_callbacks(args):
     callbacks.append(plc.EarlyStopping(
         monitor='val_roc',
         mode='max',
-        patience=10,
+        patience=20,
         min_delta=0.001
     ))
 

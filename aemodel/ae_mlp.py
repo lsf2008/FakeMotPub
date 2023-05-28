@@ -248,7 +248,7 @@ class Ae2Mlps(BaseModule):
         return out_mlp_cross, out_decoder
 
 class Ae1Mlp2(BaseModule):
-    def __init__(self, input_shape, code_length):
+    def __init__(self, input_shape, code_length, mlp_hidden=32):
         '''
         x -->Encoder -->MLP--->x1'
                             -->x2 --->Decoder --->\hat{x}
@@ -261,7 +261,7 @@ class Ae1Mlp2(BaseModule):
         self.input_shape = input_shape
         self.code_length = code_length
 
-        self.mlp = MLP2out(self.code_length, 128, 64)
+        self.mlp = MLP2out(self.code_length, mlp_hidden, self.code_length)
 
         self.encoder = Encoder(
             input_shape=input_shape,
@@ -289,7 +289,7 @@ class Ae1Mlp2(BaseModule):
 
         out_mlp = rearrange(out_mlp, 'b t h w c->(b t h w) c')
         # softmax for crossentropy loss
-        out_mlp = torch.nn.functional.softmax(out_mlp, dim =1)
+        # out_mlp = torch.nn.functional.softmax(out_mlp, dim =1)
 
         out_dec = rearrange(out_dec, 'b t h w c->b c t h w')
 
@@ -371,7 +371,7 @@ class Ae1Mlp3(BaseModule):
 
         out_mlp = rearrange(out_mlp, 'b t h w c->(b t h w) c')
         # softmax for crossentropy loss
-        out_mlp = torch.nn.functional.softmax(out_mlp, dim =1)
+        # out_mlp = torch.nn.functional.softmax(out_mlp, dim =1)
 
         out_mot_rec = rearrange(out_mot_rec, 'b t h w c->b c t h w')
         out_app = rearrange(out_app, 'b t h w c->b c t h w')
@@ -444,6 +444,57 @@ class Ae3Mlps(BaseModule):
         # divide into 2 branches
         # out = out.reshape((b, ))
         return out_mlp_cross, out_decoder, out_app_decoder
+
+class Ae0Mlp(BaseModule):
+    def __init__(self, input_shape, code_length, mlp_hidden=32):
+        '''
+        x -->Encoder -->MLP--->x1'
+                            -->x2 --->Decoder --->\hat{x}
+        Parameters
+        ----------
+        input_shape
+        code_length
+        '''
+        super(Ae0Mlp, self).__init__()
+        self.input_shape = input_shape
+        self.code_length = code_length
+
+        self.fc = torch.nn.Linear(self.code_length, 2)
+            # MLP2out(self.code_length, mlp_hidden, self.code_length)
+
+        self.encoder = Encoder(
+            input_shape=input_shape,
+            code_length=code_length
+        )
+
+        # Build decoder
+        self.decoder = Decoder(
+            code_length=code_length,
+            deepest_shape=self.encoder.deepest_shape,
+            output_shape=input_shape
+        )
+
+    def forward(self, x):
+        '''
+        :param x: b, c, t, h, w
+        :return: out_mlp: (b*t*h*w) * 2; out_enc: (b, c, t, h, w)
+        '''
+        # b, c,t, h, w = x.shape
+        out_enc = self.encoder(x)
+
+        out_mlp = rearrange(out_enc, 'b c t h w->b t h w c')
+        out_mlp, out_dec = self.fc(out_mlp)
+        # out = torch.einsum('bthwc->bcthw', out)
+
+        out_mlp = rearrange(out_mlp, 'b t h w c->(b t h w) c')
+        # softmax for crossentropy loss
+        out_mlp = self.fc(out_mlp)
+
+        out_dec = rearrange(out_dec, 'b t h w c->b c t h w')
+
+        out_dec = self.decoder(out_dec)
+
+        return out_mlp, out_dec
 
 if __name__ =='__main__':
     torch.backends.cudnn.enabled = False
