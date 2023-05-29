@@ -28,20 +28,22 @@ def drw_plot(blk, auc, xlb='Token size', ylb='AUC', maxsize = None):
     return plt
     # plt.show()
 if flg =='token_draw+coef_cmb':
-    blk = [32, 40, 48, 56, 64]
-    auc = [0.849, 0.839, 0.879, 0.838,0.824]
+    blk = [24, 32, 40, 48, 56, 64]
+    auc = [0.945, 0.946, 0.921, 0.961, 0.921, 0.886]
     mpl_style(dark=False)
     plt.figure(figsize=(10,3))
     plt.subplot(1,2,1)
     # plt.figure(figsize=(5,3))
-    drw_plot(blk, auc, maxsize=None)
+    drw_plot(blk, auc, 'Token size', 'AUC', maxsize=None)
     plt.grid()
+
     plt.subplot(1, 2, 2)
-    alpha = [1, 5, 10, 15, 20, 25, 30, 35, 40]
-    coefAUC = [0.829, 0.872, 0.873, 0.876, 0.875, 0.879, 0.868, 0.868, 0.873]
+    alpha = [16, 32, 64, 128, 256]
+    coefAUC = [0.937, 0.913, 0.927, 0.930, 0.928]
     # plt.figure(figsize=(5, 3))
-    drw_plot(alpha, coefAUC, 'Coefficients', 'AUC', None)
+    drw_plot(alpha, coefAUC, 'Neurons of hidden layer', 'AUC', None)
     plt.grid()
+    plt.tight_layout()
     plt.show()
 
 if flg =='coef_cmb':

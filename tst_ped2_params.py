@@ -3,7 +3,8 @@ from aemodel.ae_multi_out_wght import AeMultiOut
 from config.param_seting import initial_params
 from trainer.trainer import train_trainer
 from aemodel.ae_mlp import Ae1Mlp2, Ae2Mlps, AeMlp, Ae1Mlp3,Ae3Mlps
-
+import numpy as np
+import torch
 import pytorch_lightning as pl
 import time
 import prettytable
@@ -13,7 +14,7 @@ from trainer.Ae_fakeMot_cross_module import AeFakeMotCrossModule
 from trainer.mult_ae_mot_recLoss_module import MultAeMotRecLossModule
 from trainer.trainer import trainer_vd_module
 
-flg = 'hiddenLayers'
+flg = 'mlps'
 
 if flg =='ped2_motLoss':
     # pl.seed_everything(555555)
@@ -159,5 +160,34 @@ if flg == 'blkSize':
     print(f'running time:{(end_time - stat_time) / 60} m')
 
 if flg == 'mlps':
-    import importlib
+    from aemodel.model_utils import Loader
 
+    loader = Loader('aemodel.ae_mlp')
+
+    tbl = prettytable.PrettyTable()
+    tbl.field_names = ['model','hiddenLayers', 'auc', 'coef']
+
+    modelName = ['Ae0Mlp', 'Ae1Mlp2', 'Ae2Mlps', 'Ae3Mlps']
+    layers = [8, 16, 32, 64, 128, 256]
+
+    auc = 0
+    for layer in layers:
+        args = initial_params('config/ped2_cfg.yml')
+        for m in modelName:
+            model = loader.get_instance(m, input_shape=args.input_shape,
+                            code_length=args.code_length,
+                            mlp_hidden=args.mlp_hidden)
+
+            mdl = FakeMotCrossModule(model, **vars(args))
+            res = trainer_vd_module(args, mdl, vd)
+
+            tbl.add_row([m, layer, res['maxAuc'], res['coef']])
+            if auc < res['maxAuc']:
+                auc = res['maxAuc']
+                tmp = res['maxAuc']
+                tmp = np.around(tmp, decimals=4)
+                torch.save(model.state_dict(), 'data/ped2_' + m +str(layer)+
+                           str(tmp) + '.pt')
+    print(tbl)
+    with open('data/ped2/Ae1Mlp2_hiddenLayers.txt', 'a') as f:
+        f.write(tbl.get_string())

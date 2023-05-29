@@ -57,13 +57,13 @@ class MLP(torch.nn.Module):
     def __init__(self, input_dim, hidden_dim, output_dim):
         super(MLP, self).__init__()
         self.fc1 = torch.nn.Linear(input_dim, hidden_dim)
-        self.fc2 = torch.nn.Linear(hidden_dim, hidden_dim)
+        # self.fc2 = torch.nn.Linear(hidden_dim, hidden_dim)
         self.fc3 = torch.nn.Linear(hidden_dim, output_dim)
         self.relu = torch.nn.ReLU()
 
     def forward(self, x):
         out = self.relu(self.fc1(x))
-        out = self.relu(self.fc2(out))
+        # out = self.relu(self.fc2(out))
         out = self.fc3(out)
         return out
 
@@ -192,7 +192,7 @@ class AeMlp(BaseModule):
         # out = out.reshape((b, ))
         return out_mlp, out_enc
 class Ae2Mlps(BaseModule):
-    def __init__(self, input_shape, code_length):
+    def __init__(self, input_shape, code_length, mlp_hidden=32):
         '''
         x -->Encoder -->MLP--->x'
         x -->Encoder -->MLP--->x1 --->Decoder --->\hat{x}
@@ -206,9 +206,9 @@ class Ae2Mlps(BaseModule):
         self.code_length = code_length
 
         # x-->encoder -->MLP -->cross entropy
-        self.mlp_cross = MLP(self.code_length, 32, 2)
+        self.mlp_cross = MLP(self.code_length, mlp_hidden, 2)
         # x-->encoder -->MLP -->decoder
-        self.mlp_decoder = MLP(self.code_length, 128, 64)
+        self.mlp_decoder = MLP(self.code_length, mlp_hidden, 64)
 
         self.encoder = Encoder(
             input_shape=input_shape,
@@ -330,7 +330,7 @@ class MLP3out(torch.nn.Module):
         return out_mot_cls, out_mot_rec, out_app
 
 class Ae1Mlp3(BaseModule):
-    def __init__(self, input_shape, code_length):
+    def __init__(self, input_shape, code_length, hidden):
         '''
         x -->Encoder -->MLP--->x1'
                             -->x2 --->Decoder --->\hat{x}
@@ -386,7 +386,7 @@ class Ae1Mlp3(BaseModule):
         return out_mlp, out_mot_rec, out_app
 
 class Ae3Mlps(BaseModule):
-    def __init__(self, input_shape, code_length):
+    def __init__(self, input_shape, code_length, mlp_hidden=32):
         '''
         x -->Encoder -->MLP--->x'
         x -->Encoder -->MLP--->x1 --->Decoder --->\hat{x}
@@ -400,12 +400,12 @@ class Ae3Mlps(BaseModule):
         self.code_length = code_length
 
         # x-->encoder -->MLP -->cross entropy
-        self.mlp_cross = MLP(self.code_length, 32, 2)
+        self.mlp_cross = MLP(self.code_length, mlp_hidden, 2)
         # x-->encoder -->MLP -->decoder
-        self.mlp_mot_decoder = MLP(self.code_length, 128, 64)
+        self.mlp_mot_decoder = MLP(self.code_length, mlp_hidden, 64)
 
         # x-->encoder -->MLP -->decoder
-        self.mlp_app_decoder = MLP(self.code_length, 128, 64)
+        self.mlp_app_decoder = MLP(self.code_length, mlp_hidden, 64)
 
         self.encoder = Encoder(
             input_shape=input_shape,
