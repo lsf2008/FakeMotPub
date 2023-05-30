@@ -160,6 +160,7 @@ if flg == 'blkSize':
     print(f'running time:{(end_time - stat_time) / 60} m')
 
 if flg == 'mlps':
+    # pl.seed_everything(999999)
     from aemodel.model_utils import Loader
 
     loader = Loader('aemodel.ae_mlp')
@@ -171,23 +172,46 @@ if flg == 'mlps':
     layers = [8, 16, 32, 64, 128, 256]
 
     auc = 0
-    for layer in layers:
-        args = initial_params('config/ped2_cfg.yml')
-        for m in modelName:
+
+    for m in modelName:
+        if m!='Ae0Mlp':
+
+            for layer in layers:
+                args = initial_params('config/ped2_cfg.yml')
+                vd = VideoDataLoader(**vars(args))
+                args.mlp_hidden= layer
+                model = loader.get_instance(m, input_shape=args.input_shape,
+                                code_length=args.code_length,
+                                mlp_hidden=args.mlp_hidden)
+
+                mdl = FakeMotCrossModule(model, **vars(args))
+                res = trainer_vd_module(args, mdl, vd)
+
+                tbl.add_row([m, layer, res['maxAuc'], res['coef']])
+                if auc < res['maxAuc']:
+                    auc = res['maxAuc']
+                    tmp = res['maxAuc']
+                    tmp = np.around(tmp, decimals=4)
+                    torch.save(model.state_dict(), 'data/ped2_' + m + '_' + str(layer) + '_' +
+                               str(tmp) + '.pt')
+        else:
+            args = initial_params('config/ped2_cfg.yml')
+            vd = VideoDataLoader(**vars(args))
             model = loader.get_instance(m, input_shape=args.input_shape,
-                            code_length=args.code_length,
-                            mlp_hidden=args.mlp_hidden)
+                                        code_length=args.code_length,
+                                        mlp_hidden=args.mlp_hidden)
 
             mdl = FakeMotCrossModule(model, **vars(args))
             res = trainer_vd_module(args, mdl, vd)
 
-            tbl.add_row([m, layer, res['maxAuc'], res['coef']])
+            tbl.add_row([m, 0, res['maxAuc'], res['coef']])
             if auc < res['maxAuc']:
                 auc = res['maxAuc']
                 tmp = res['maxAuc']
                 tmp = np.around(tmp, decimals=4)
-                torch.save(model.state_dict(), 'data/ped2_' + m +str(layer)+
+                torch.save(model.state_dict(), 'data/ped2_' + m + '_'+str(0) + '_'+
                            str(tmp) + '.pt')
+
     print(tbl)
     with open('data/ped2/Ae1Mlp2_hiddenLayers.txt', 'a') as f:
         f.write(tbl.get_string())

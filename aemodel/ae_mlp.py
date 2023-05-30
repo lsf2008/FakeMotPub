@@ -483,16 +483,16 @@ class Ae0Mlp(BaseModule):
         out_enc = self.encoder(x)
 
         out_mlp = rearrange(out_enc, 'b c t h w->b t h w c')
-        out_mlp, out_dec = self.fc(out_mlp)
+        out_mlp = self.fc(out_mlp)
         # out = torch.einsum('bthwc->bcthw', out)
 
         out_mlp = rearrange(out_mlp, 'b t h w c->(b t h w) c')
         # softmax for crossentropy loss
-        out_mlp = self.fc(out_mlp)
+        # out_mlp = self.fc(out_mlp)
 
-        out_dec = rearrange(out_dec, 'b t h w c->b c t h w')
+        # out_dec = rearrange(out_dec, 'b t h w c->b c t h w')
 
-        out_dec = self.decoder(out_dec)
+        out_dec = self.decoder(out_enc)
 
         return out_mlp, out_dec
 

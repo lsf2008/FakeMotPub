@@ -50,8 +50,8 @@ raw_shape: [3, *num_frames, 480, 856] # original size of video frame
 train_dt_sampler: 'random'
 val_dt_sampler: 'uniform'
 stride: 16
-rec_layers: [0,3,4]
-wght_layers: [0,3, 4]
+rec_layers: [0]
+wght_layers: [0]
 
 #=====================train=====================
 # training parameters

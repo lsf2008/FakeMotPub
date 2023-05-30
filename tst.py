@@ -1,4 +1,5 @@
 # from aemodel.ae_multi_out import AeMultiOut
+import numpy as np
 import torch
 
 from aemodel.ae_multi_out_wghts import AeMultiOut
@@ -19,7 +20,7 @@ flg = 'ped2'
 tbl = pt.PrettyTable()
 tbl.field_names = ['auc', 'cmb_coef', 'layers', 'epoch']
 if flg =='ped2':
-    pl.seed_everything(999999)
+    # pl.seed_everything(999999)
     # ===================ae==================
     stat_time = time.time()
     args = initial_params('config/ped2_cfg.yml')
@@ -38,7 +39,11 @@ if flg =='ped2':
 
     # 使用module训练模型
     res = trainer_vd_module(args, mdl, vd)
-    torch.save(model.state_dict(), 'data/ped2_stateDic.pt')
+    tmp = res['maxAuc']
+    tmp = np.around(tmp, decimals=4)
+
+    torch.save(model.state_dict(), 'data/ped2_stateDic'+
+               str(tmp)+'.pt')
     end_time = time.time()
     tbl.add_row([res['maxAuc'], res['coef'], args.rec_layers, res['epoch']])
     print(f'running time:{(end_time - stat_time) / 60} m')

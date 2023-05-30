@@ -40,8 +40,8 @@ raw_shape: [3, *num_frames, 240, 360] # original size of video frame
 train_dt_sampler: 'random'
 val_dt_sampler: 'uniform'
 stride: 16
-rec_layers: [0,3,4]
-wght_layers: [0,3, 4]
+rec_layers: [0]
+wght_layers: [0]
 
 #=====================train=====================
 # training parameters
@@ -60,7 +60,7 @@ updtR_epoches: 15
 # model parameters
 # input_shape: [3, 8, 32, 32]
 code_length: 64
-mlp_hidden: 32
+mlp_hidden: 8
 
 # loss parameters
 motLsAlpha: [10, 1, 1, 0.5] #(mot_rec, anomaly_mot, cross)
