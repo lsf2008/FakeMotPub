@@ -429,21 +429,21 @@ class Ae3Mlps(BaseModule):
 
         out_mlp = rearrange(out_enc, 'b c t h w->b t h w c')
         out_mlp_cross = self.mlp_cross(out_mlp)
-        # out = torch.einsum('bthwc->bcthw', out)
         out_mlp_cross = rearrange(out_mlp_cross, 'b t h w c->(b t h w) c')
 
         # out_decoder = rearrange(out, 'b t h w c->b c t h w')
-        out_decoder = self.mlp_mot_decoder(out_mlp)
+        out_norm, out_anomaly = torch.split(out_mlp, out_enc.shape[0]//2, dim=0)
+        out_decoder = self.mlp_mot_decoder(out_norm)
         out_decoder = rearrange(out_decoder, 'b t h w c->b c t h w')
         out_decoder = self.decoder(out_decoder)
 
-        out_app_decoder = self.mlp_app_decoder(out_mlp)
+        out_app_decoder = self.mlp_app_decoder(out_anomaly)
         out_app_decoder = rearrange(out_app_decoder, 'b t h w c->b c t h w')
         out_app_decoder = self.decoder(out_app_decoder)
 
-        # divide into 2 branches
-        # out = out.reshape((b, ))
-        return out_mlp_cross, out_decoder, out_app_decoder
+        #
+        out_join = torch.cat((out_decoder, out_app_decoder), dim=0)
+        return out_mlp_cross, out_join
 
 class Ae0Mlp(BaseModule):
     def __init__(self, input_shape, code_length, mlp_hidden=32):

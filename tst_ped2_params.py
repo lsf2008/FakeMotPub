@@ -118,7 +118,7 @@ if flg =='hiddenLayers':
         tbl.add_row([layer, res['maxAuc'], res['coef']])
     end_time = time.time()
     print(tbl)
-    with open('data/ped2/Ae1Mlp2_hiddenLayers.txt', 'a') as f:
+    with open('data/ped2/hiddenLayers.txt', 'a') as f:
         f.write(tbl.get_string())
 
     print(f'running time:{(end_time - stat_time) / 60} m')
@@ -160,7 +160,7 @@ if flg == 'blkSize':
     print(f'running time:{(end_time - stat_time) / 60} m')
 
 if flg == 'mlps':
-    # pl.seed_everything(999999)
+    pl.seed_everything(999999)
     from aemodel.model_utils import Loader
 
     loader = Loader('aemodel.ae_mlp')
@@ -168,7 +168,7 @@ if flg == 'mlps':
     tbl = prettytable.PrettyTable()
     tbl.field_names = ['model','hiddenLayers', 'auc', 'coef']
 
-    modelName = ['Ae0Mlp', 'Ae1Mlp2', 'Ae2Mlps', 'Ae3Mlps']
+    modelName = ['Ae3Mlps']
     layers = [8, 16, 32, 64, 128, 256]
 
     auc = 0
@@ -213,5 +213,5 @@ if flg == 'mlps':
                            str(tmp) + '.pt')
 
     print(tbl)
-    with open('data/ped2/Ae1Mlp2_hiddenLayers.txt', 'a') as f:
+    with open('data/ped2/hiddenLayers.txt', 'a') as f:
         f.write(tbl.get_string())
