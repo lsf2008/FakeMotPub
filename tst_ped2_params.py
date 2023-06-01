@@ -13,6 +13,7 @@ from trainer.fakeMot_cross_module import FakeMotCrossModule
 from trainer.Ae_fakeMot_cross_module import AeFakeMotCrossModule
 from trainer.mult_ae_mot_recLoss_module import MultAeMotRecLossModule
 from trainer.trainer import trainer_vd_module
+from aemodel.model_utils import Loader
 
 flg = 'mlps'
 
@@ -161,7 +162,7 @@ if flg == 'blkSize':
 
 if flg == 'mlps':
     pl.seed_everything(999999)
-    from aemodel.model_utils import Loader
+
 
     loader = Loader('aemodel.ae_mlp')
 

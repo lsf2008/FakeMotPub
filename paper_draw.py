@@ -4,7 +4,7 @@ import numpy  as np
 flg = 'token_draw+coef_cmb'
 
 from qbstyles import mpl_style
-def drw_plot(blk, auc, xlb='Token size', ylb='AUC', maxsize = None):
+def drw_plot(blk, auc, xlb='Token size', ylb='AUC', maxsize = None, shwDt=True):
 
     # plt.style.use('seaborn-muted')
     plt.plot(blk, auc, marker='*', color='r', markersize=10,
@@ -24,6 +24,10 @@ def drw_plot(blk, auc, xlb='Token size', ylb='AUC', maxsize = None):
 
         plt.gcf().subplots_adjust(left=margin, right=1. - margin)
         plt.gcf().set_size_inches(s, plt.gcf().get_size_inches()[1])
+
+    if shwDt:
+        for i in range(len(blk)):
+            plt.text(blk[i]+1, auc[i], str(auc[i]))
     plt.tight_layout()
     return plt
     # plt.show()
@@ -38,8 +42,8 @@ if flg =='token_draw+coef_cmb':
     plt.grid()
 
     plt.subplot(1, 2, 2)
-    alpha = [16, 32, 64, 128, 256]
-    coefAUC = [0.937, 0.913, 0.927, 0.930, 0.928]
+    alpha = [8, 16, 32, 64, 128, 256]
+    coefAUC = [0.966, 0.939, 0.933, 0.924, 0.945, 0.944]
     # plt.figure(figsize=(5, 3))
     drw_plot(alpha, coefAUC, 'Neurons of hidden layer', 'AUC', None)
     plt.grid()
@@ -51,8 +55,10 @@ if flg =='coef_cmb':
     coefAUC = [0.829, 0.872, 0.873, 0.876, 0.875, 0.879, 0.868, 0.868, 0.873]
     plt.figure(figsize=(5, 3))
     drw_plot(alpha, coefAUC, 'Coefficients', 'AUC',None)
-if flg == 'rec_layers':
-    pass
+if flg == 'hiddenLayers':
+    models = ['Ae0Mlp','Ae1Mlp','AE2Mlp']
+    hidden = [8, 16, 32, 64, 128, 256]
+
 
 if flg == 'var_layers':
     pass

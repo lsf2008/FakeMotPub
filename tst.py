@@ -15,7 +15,12 @@ import pytorch_lightning as pl
 import prettytable as pt
 import time
 import utils as utils
+from aemodel.model_utils import Loader
+
 # pl.seed_everything(999999)
+loader = Loader('aemodel.ae_mlp')
+modelName = 'Ae1Mlp2'
+
 flg = 'ped2'
 tbl = pt.PrettyTable()
 tbl.field_names = ['auc', 'cmb_coef', 'layers', 'epoch']
@@ -27,9 +32,9 @@ if flg =='ped2':
     # 数据集
     vd = VideoDataLoader(**vars(args))
     # 模型
-    model = Ae1Mlp2(input_shape=args.input_shape,
-                    code_length=args.code_length,
-                    mlp_hidden=args.mlp_hidden)
+    model = loader.get_instance(modelName, input_shape=args.input_shape,
+                                code_length=args.code_length,
+                                mlp_hidden=args.mlp_hidden)
     # module
     # ------------------only ae-----------------
     # mdl = MultAERecLossModule(model, **vars(args))
