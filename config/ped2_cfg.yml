@@ -63,7 +63,7 @@ code_length: 64
 mlp_hidden: 8
 
 # loss parameters
-motLsAlpha: [10, 1, 1, 0.5] #(mot_rec, anomaly_mot, cross)
+motLsAlpha: [0, 1, 10, 0.5] #(mot_rec, anomaly_mot, cross)
 
 #score combination coefficients list
 cmbScoreWght: [-2, -1, -0.5, -0.1, 0, 0.1, 0.5, 1, 2, 5]
