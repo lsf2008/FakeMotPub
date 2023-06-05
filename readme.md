@@ -13,7 +13,7 @@ To run the program, please install the following packages:
 - torchvision==0.12.0
 
 
-# How to run it`
+# How to run it
 1. To start, prepare the data using a CSV file. Since the video is stored with images in a single folder, provide the folder name in the CSV file followed by the ground truth for each frame.
 2. Next, configure the YAML file using the data CSV file, and adjust other parameters such as batch size, learning rate, weight decay, and block size, etc.
 3. Finally, specify the "flg" in the [tst.py](http://tst.py/) file and run it.
