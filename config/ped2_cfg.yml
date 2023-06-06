@@ -9,7 +9,7 @@ val_dataPath: 'E:/dataset/UCSD/UCSDped2/label/test.csv'
 tst_dataPath: 'E:/dataset/UCSD/UCSDped2/label/test.csv'
 
 #background for ped2 dataset
-bgPth: 'dataset/bg/ped2Bg.pt'
+bgPth:
 
 #removing the background 48*48
 #mean: [-0.1951, -0.1951, -0.1951]
