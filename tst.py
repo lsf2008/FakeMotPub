@@ -2,8 +2,7 @@
 import numpy as np
 import torch
 from config.param_seting import initial_params
-from trainer.trainer import train_trainer,trainer_vd_module
-# from aemodel.autoencoder import convAE
+from trainer.trainer import trainer_vd_module
 from dataset.video_dataloader import VideoDataLoader
 from aemodel.ae_mlp import AeMlp, Ae2Mlps, Ae1Mlp2,Ae1Mlp3
 from trainer.fakeMot_cross_module import FakeMotCrossModule
