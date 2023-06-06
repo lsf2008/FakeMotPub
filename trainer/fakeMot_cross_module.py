@@ -64,11 +64,7 @@ class FakeMotCrossModule(pytorch_lightning.LightningModule):
 
         # -----------normal data reconstruction----------
         x = x.reshape((-1, *x.shape[2:]))
-        # x_r, z, enc_out, dec_out = self.model(x)
 
-        # -----------anomaly data reconstruction---------
-        # shuffle the data along the time axis
-        # x_shuffle = x[:, :, torch.randperm(x.size()[2]), :, :]
         x_shuffle = x[:, :, utils.shuffle_index(x.size()[2]), :, :]
         x_all = torch.cat((x, x_shuffle), dim=0)
 
@@ -90,7 +86,6 @@ class FakeMotCrossModule(pytorch_lightning.LightningModule):
                    self.hparams.motLsAlpha[1]*anorm_mot_ls +
                    self.hparams.motLsAlpha[2]*cross_ls)
 
-        # print(f'------------x_r:{x_r.requires_grad},x:{x.requires_grad}--------------')
         logDic ={'mot_rec_ls': mot_rec_ls,
                  'cross_ls':cross_ls,
                  'anorm_mot_ls': anorm_mot_ls}
@@ -113,7 +108,7 @@ class FakeMotCrossModule(pytorch_lightning.LightningModule):
     def tst_val_step(self, batch):
         x = batch['video']
         y = batch['label']
-        # x = module_utils.filterCrops(x) # n, c, t, h, w
+
         x = x.reshape((-1, *x.shape[2:]))
         x_mot_soft, x_mot_rec = self.model(x)
         # x_r = self(x)
@@ -133,9 +128,7 @@ class FakeMotCrossModule(pytorch_lightning.LightningModule):
 
     def tst_val_step_end(self, outputs, logStr = 'val_roc'):
         # obtain all scores and corresponding y
-        # scores, y = module_utils.obtAScoresFrmOutputs(outputs)
         scores,y = module_utils.obtAllScoresFrmDicOutputs(outputs)
-        # self.res['epoch'] = self.current_epoch
 
         # compute auc, scores: dictory
         module_utils.cmpCmbAUCWght(scores, y_true=y,

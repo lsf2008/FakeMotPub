@@ -7,7 +7,6 @@ from trainer.trainer import train_trainer,trainer_vd_module
 from dataset.video_dataloader import VideoDataLoader
 from aemodel.ae_mlp import AeMlp, Ae2Mlps, Ae1Mlp2,Ae1Mlp3
 from trainer.fakeMot_cross_module import FakeMotCrossModule
-from trainer.fakeMot_noCls_module import FakeMotNoClsModule
 
 import pytorch_lightning as pl
 import prettytable as pt
